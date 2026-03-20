@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AGAIN..</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<style>
+body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
+button { margin: 5px; padding: 6px 10px; }
+.file { margin: 10px 0; padding: 10px; background: #222; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<h2>📁 简易网盘</h2>
+
+<input type="file" id="fileInput">
+<button onclick="upload()">上传</button>
+
+<h3>📄 文件列表</h3>
+<div id="fileList"></div>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://tcewihcxuvriiigcorqq.supabase.co",
+  "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4"
+);
+
+const bucket = "music";
+
+// 上传
+async function upload() {
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return alert("选个文件");
+
+  const fileName = Date.now() + "-" + file.name;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file);
+
+  if (error) {
+    alert("上传失败: " + error.message);
+  } else {
+    alert("上传成功！");
+    loadFiles();
+  }
+}
+
+// 加载文件列表
+async function loadFiles() {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .list();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const container = document.getElementById("fileList");
+  container.innerHTML = "";
+
+  data.forEach(file => {
+    const url = `https://tcewihcxuvriiigcorqq.supabase.co/storage/v1/object/public/${bucket}/${file.name}`;
+
+    const div = document.createElement("div");
+    div.className = "file";
+
+    div.innerHTML = `
+      <div>${file.name}</div>
+      <a href="${url}" target="_blank">下载</a>
+      ${file.name.endsWith(".mp3") ? `<br><audio controls src="${url}"></audio>` : ""}
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+// 初始化加载
+loadFiles();
+</script>
+
+</body>
+</html>
