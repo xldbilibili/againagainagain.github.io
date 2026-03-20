@@ -155,27 +155,34 @@
     function extractFoldersFromItems(items) {
     const folders = new Set();
     items.forEach(item => {
+        const name = item.name;
+        // 忽略系统占位符或空名称
+        if (!name || name === '.emptyFolderPlaceholder') return;
+
         // 情况1：显式文件夹占位符（以 '/' 结尾）
-        if (item.name.endsWith('/')) {
-            let folderName = item.name;
-            // 去掉当前路径前缀，只保留相对路径
+        if (name.endsWith('/')) {
+            let folderName = name;
             if (currentPath && folderName.startsWith(currentPath)) {
                 folderName = folderName.substring(currentPath.length);
             }
-            // 去掉末尾的 '/'
             folderName = folderName.replace(/\/+$/, '');
-            // 确保是直接子文件夹（不包含 '/'）
             if (folderName && !folderName.includes('/')) {
                 folders.add(folderName);
             }
         }
-        // 情况2：普通文件，如果文件名包含 '/'，提取第一级目录作为虚拟文件夹
-        else if (item.name.includes('/')) {
-            let relative = item.name;
-            if (currentPath && item.name.startsWith(currentPath)) {
-                relative = item.name.substring(currentPath.length);
+        // 情况2：无 metadata 或 metadata.size === 0 的条目，且不包含 '/'（直接子文件夹）
+        else if (!item.metadata || item.metadata.size === 0) {
+            // 确保是当前目录下的直接子文件夹（不包含 '/'）
+            if (!name.includes('/')) {
+                folders.add(name);
             }
-            // 如果 relative 包含 '/', 则第一段即为直接子文件夹
+        }
+        // 情况3：普通文件路径中提取的虚拟文件夹（保留原有逻辑）
+        else if (name.includes('/')) {
+            let relative = name;
+            if (currentPath && name.startsWith(currentPath)) {
+                relative = name.substring(currentPath.length);
+            }
             if (relative.includes('/')) {
                 const folder = relative.split('/')[0];
                 if (folder && !folder.includes('/')) {
@@ -187,7 +194,6 @@
     console.log('📁 提取到的文件夹:', Array.from(folders));
     return Array.from(folders).sort();
 }
-
     async function loadCurrentDirectory() {
         fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
         folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
@@ -199,16 +205,19 @@
             if (error) throw error;
             console.log('🔍 list 返回数据:', data); // 添加调试输出
             const validItems = (data || []).filter(item => {
-                if (item.name.startsWith('.')) return false;
-                if (isFolderPlaceholder(item)) return true;
+                const name = item.name;
+                if (!name || name === '.emptyFolderPlaceholder') return false;
+                if (!item.metadata || item.metadata.size === 0) return true;
+                return (item.metadata && item.metadata.size > 0);
+            });
+
+            const folders = extractFoldersFromItems(validItems);
+            renderFolderList(folders);
+            const files = validItems.filter(item => {
+                // 排除文件夹占位符（无 metadata 或 size=0）
                 if (!item.metadata || item.metadata.size === 0) return false;
                 return true;
             });
-
-            allItems = validItems;
-            const folders = extractFoldersFromItems(validItems);
-            renderFolderList(folders);
-            const files = validItems.filter(item => !isFolderPlaceholder(item));
             renderFileGrid(files);
             renderBreadcrumb();
         } catch (err) {
@@ -219,6 +228,7 @@
         }
     }
 
+    // 
     function renderFolderList(folders) {
         if (folders.length === 0) {
             folderListDiv.innerHTML = '<div class="empty-state">📭 无子文件夹</div>';
