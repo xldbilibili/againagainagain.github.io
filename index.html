@@ -6,286 +6,55 @@
     <title>Supabase 云盘</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0c10;
-            color: #e6e9f0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        /* 顶部栏 */
-        .top-bar {
-            background: #1e2128;
-            border-bottom: 1px solid #2c2f36;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .title {
-            font-size: 1.4rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        button, .file-input-label {
-            background: #2c7da0;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        button:hover, .file-input-label:hover {
-            background: #1f5e7e;
-        }
-        .file-input-label {
-            background: #2c2f36;
-        }
-        .file-input-label:hover {
-            background: #3a3e48;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        /* 三栏布局 */
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            padding: 16px;
-            gap: 16px;
-        }
-        /* 左侧文件夹树 */
-        .sidebar {
-            width: 260px;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .sidebar-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            font-weight: 500;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .folder-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
-        .folder-item {
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-        .folder-item:hover {
-            background: #2c2f36;
-        }
-        .folder-item.active {
-            background: #2c7da0;
-        }
-        /* 中间内容区 */
-        .content-area {
-            flex: 1;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .breadcrumb {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-            background: #1e2128;
-        }
-        .breadcrumb-item {
-            cursor: pointer;
-            color: #9aa2b5;
-            transition: color 0.2s;
-        }
-        .breadcrumb-item:hover {
-            color: #2c7da0;
-        }
-        .breadcrumb-sep {
-            color: #5a5f6e;
-        }
-        .file-grid {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 16px;
-            align-content: start;
-        }
-        .file-card {
-            background: #13161c;
-            border-radius: 12px;
-            border: 1px solid #2c2f36;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.1s, border-color 0.2s;
-        }
-        .file-card:hover {
-            border-color: #2c7da0;
-        }
-        .file-card.selected {
-            border-color: #2c7da0;
-            box-shadow: 0 0 0 2px rgba(44,125,160,0.3);
-        }
-        .file-preview {
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #0f1117;
-        }
-        .file-preview img, .file-preview video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .file-preview audio {
-            width: 90%;
-        }
-        .file-info {
-            padding: 10px;
-        }
-        .file-name {
-            font-size: 0.85rem;
-            font-weight: 500;
-            word-break: break-all;
-            margin-bottom: 6px;
-        }
-        .file-meta {
-            font-size: 0.7rem;
-            color: #9aa2b5;
-            display: flex;
-            justify-content: space-between;
-        }
-        .file-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .btn-small {
-            background: #2c2f36;
-            padding: 4px 10px;
-            font-size: 0.7rem;
-            border-radius: 16px;
-            text-decoration: none;
-            color: #e6e9f0;
-            cursor: pointer;
-            border: none;
-        }
-        .btn-small:hover {
-            background: #3a3e48;
-        }
-        .delete-btn {
-            background: #5a2a2a;
-        }
-        .delete-btn:hover {
-            background: #7a3a3a;
-        }
-        /* 右侧详情区 */
-        .detail-panel {
-            width: 320px;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .detail-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            font-weight: 500;
-        }
-        .detail-content {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-        }
-        .detail-preview {
-            background: #13161c;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .detail-info p {
-            margin: 8px 0;
-            word-break: break-all;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-        }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e2128;
-            border-left: 4px solid #2c7da0;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: fadeIn 0.2s;
-        }
-        .toast.error {
-            border-left-color: #dc3545;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 900px) {
-            .detail-panel { width: 260px; }
-            .sidebar { width: 220px; }
-        }
-        @media (max-width: 700px) {
-            .main-layout { flex-direction: column; }
-            .sidebar, .detail-panel { width: 100%; height: 200px; }
-        }
+        /* 样式与前相同，省略... */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0a0c10; color: #e6e9f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { background: #1e2128; border-bottom: 1px solid #2c2f36; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .title { font-size: 1.4rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        button, .file-input-label { background: #2c7da0; border: none; color: white; padding: 6px 14px; border-radius: 20px; font-weight: 500; cursor: pointer; transition: background 0.2s; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
+        button:hover, .file-input-label:hover { background: #1f5e7e; }
+        .file-input-label { background: #2c2f36; }
+        .file-input-label:hover { background: #3a3e48; }
+        input[type="file"] { display: none; }
+        .main-layout { display: flex; flex: 1; overflow: hidden; padding: 16px; gap: 16px; }
+        .sidebar { width: 260px; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header { padding: 12px 16px; border-bottom: 1px solid #2c2f36; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+        .folder-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .folder-item { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .folder-item:hover { background: #2c2f36; }
+        .folder-item.active { background: #2c7da0; }
+        .content-area { flex: 1; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
+        .breadcrumb { padding: 12px 16px; border-bottom: 1px solid #2c2f36; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #1e2128; }
+        .breadcrumb-item { cursor: pointer; color: #9aa2b5; transition: color 0.2s; }
+        .breadcrumb-item:hover { color: #2c7da0; }
+        .breadcrumb-sep { color: #5a5f6e; }
+        .file-grid { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; align-content: start; }
+        .file-card { background: #13161c; border-radius: 12px; border: 1px solid #2c2f36; overflow: hidden; cursor: pointer; transition: transform 0.1s, border-color 0.2s; }
+        .file-card:hover { border-color: #2c7da0; }
+        .file-card.selected { border-color: #2c7da0; box-shadow: 0 0 0 2px rgba(44,125,160,0.3); }
+        .file-preview { height: 120px; display: flex; align-items: center; justify-content: center; background: #0f1117; }
+        .file-preview img, .file-preview video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .file-preview audio { width: 90%; }
+        .file-info { padding: 10px; }
+        .file-name { font-size: 0.85rem; font-weight: 500; word-break: break-all; margin-bottom: 6px; }
+        .file-meta { font-size: 0.7rem; color: #9aa2b5; display: flex; justify-content: space-between; }
+        .file-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-small { background: #2c2f36; padding: 4px 10px; font-size: 0.7rem; border-radius: 16px; text-decoration: none; color: #e6e9f0; cursor: pointer; border: none; }
+        .btn-small:hover { background: #3a3e48; }
+        .delete-btn { background: #5a2a2a; }
+        .delete-btn:hover { background: #7a3a3a; }
+        .detail-panel { width: 320px; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
+        .detail-header { padding: 12px 16px; border-bottom: 1px solid #2c2f36; font-weight: 500; }
+        .detail-content { flex: 1; padding: 16px; overflow-y: auto; }
+        .detail-preview { background: #13161c; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px; }
+        .detail-info p { margin: 8px 0; word-break: break-all; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e2128; border-left: 4px solid #2c7da0; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; animation: fadeIn 0.2s; }
+        .toast.error { border-left-color: #dc3545; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 900px) { .detail-panel { width: 260px; } .sidebar { width: 220px; } }
+        @media (max-width: 700px) { .main-layout { flex-direction: column; } .sidebar, .detail-panel { width: 100%; height: 200px; } }
     </style>
 </head>
 <body>
@@ -302,31 +71,22 @@
 </div>
 
 <div class="main-layout">
-    <!-- 左侧：文件夹列表 -->
     <div class="sidebar">
         <div class="sidebar-header">
             <span>📁 当前目录</span>
             <button id="createFolderBtnSidebar" style="background: none; padding: 4px 8px;">+</button>
         </div>
-        <div class="folder-list" id="folderList">
-            <div class="empty-state">暂无文件夹</div>
-        </div>
+        <div class="folder-list" id="folderList"><div class="empty-state">暂无文件夹</div></div>
     </div>
 
-    <!-- 中间：文件列表 -->
     <div class="content-area">
         <div class="breadcrumb" id="breadcrumb"></div>
-        <div class="file-grid" id="fileGrid">
-            <div class="empty-state">加载中...</div>
-        </div>
+        <div class="file-grid" id="fileGrid"><div class="empty-state">加载中...</div></div>
     </div>
 
-    <!-- 右侧：详情预览 -->
     <div class="detail-panel">
         <div class="detail-header">📄 详情</div>
-        <div class="detail-content" id="detailContent">
-            <div class="empty-state">点击文件查看详情</div>
-        </div>
+        <div class="detail-content" id="detailContent"><div class="empty-state">点击文件查看详情</div></div>
     </div>
 </div>
 
@@ -336,14 +96,13 @@
     const SUPABASE_ANON_KEY = "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4";
     const BUCKET_NAME = "music";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 使用唯一变量名避免冲突
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 当前路径（例如 "folder/subfolder/"）
     let currentPath = "";
-    let selectedFile = null;        // 当前选中的文件对象 { name, metadata, ... }
-    let allItems = [];              // 当前目录下的所有条目（文件夹+文件）
+    let selectedFile = null;
+    let allItems = [];
 
-    // DOM 元素
     const uploadInput = document.getElementById('uploadInput');
     const createFolderBtn = document.getElementById('createFolderBtn');
     const createFolderBtnSidebar = document.getElementById('createFolderBtnSidebar');
@@ -353,7 +112,6 @@
     const breadcrumbDiv = document.getElementById('breadcrumb');
     const detailContentDiv = document.getElementById('detailContent');
 
-    // ==================== 辅助函数 ====================
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.className = `toast ${isError ? 'error' : ''}`;
@@ -375,45 +133,36 @@
         return new Date(isoString).toLocaleString();
     }
 
-    // 获取文件扩展名对应的预览HTML
     function getPreviewHtml(fileName, publicUrl) {
         const ext = fileName.split('.').pop().toLowerCase();
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+        if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
             return `<img src="${publicUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        } else if (['mp4', 'webm', 'mov'].includes(ext)) {
+        } else if (['mp4','webm','mov'].includes(ext)) {
             return `<video controls style="max-width:100%; max-height:100%;"><source src="${publicUrl}" type="video/${ext}"></video>`;
-        } else if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) {
+        } else if (['mp3','wav','ogg','flac'].includes(ext)) {
             return `<audio controls style="width:90%;"><source src="${publicUrl}" type="audio/${ext}"></audio>`;
         } else {
             return `<div style="font-size: 3rem;">📄</div>`;
         }
     }
 
-    // 判断是否为文件夹占位符对象（以 '/' 结尾且 size 为 0 或无 metadata）
     function isFolderPlaceholder(obj) {
         if (obj.name.endsWith('/')) return true;
         if (!obj.metadata) return false;
         return obj.metadata.size === 0 && obj.name.includes('/') && obj.name.endsWith('/');
     }
 
-    // 从列表中提取文件夹（唯一目录名称）
     function extractFoldersFromItems(items) {
         const folders = new Set();
         items.forEach(item => {
-            // 如果是文件夹占位符
             if (isFolderPlaceholder(item)) {
                 let folderName = item.name;
-                // 去掉当前路径前缀，只取下一级目录名
                 if (currentPath && folderName.startsWith(currentPath)) {
                     folderName = folderName.substring(currentPath.length);
                 }
-                // 去掉末尾的 /
                 if (folderName.endsWith('/')) folderName = folderName.slice(0, -1);
-                if (folderName && !folderName.includes('/')) { // 只显示直接子文件夹
-                    folders.add(folderName);
-                }
+                if (folderName && !folderName.includes('/')) folders.add(folderName);
             } else {
-                // 普通文件，如果名字包含路径，提取直接文件夹
                 if (item.name.includes('/')) {
                     const relative = currentPath ? item.name.substring(currentPath.length) : item.name;
                     if (relative.includes('/')) {
@@ -426,49 +175,37 @@
         return Array.from(folders).sort();
     }
 
-    // 加载当前目录内容
     async function loadCurrentDirectory() {
         fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
         folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
         try {
-            // 列出当前路径下的所有对象（prefix 为 currentPath）
-            const { data, error } = await supabase.storage
+            const { data, error } = await supabaseClient.storage
                 .from(BUCKET_NAME)
                 .list(currentPath, { limit: 1000 });
 
             if (error) throw error;
 
-            // 过滤有效条目
             const validItems = (data || []).filter(item => {
-                // 排除隐藏文件（如 .folder）
                 if (item.name.startsWith('.')) return false;
-                // 文件夹占位符保留（用于显示）
                 if (isFolderPlaceholder(item)) return true;
-                // 普通文件必须有元数据且大小 > 0
                 if (!item.metadata || item.metadata.size === 0) return false;
                 return true;
             });
 
             allItems = validItems;
-
-            // 提取文件夹（直接子目录）
             const folders = extractFoldersFromItems(validItems);
             renderFolderList(folders);
-
-            // 提取文件（排除文件夹占位符）
             const files = validItems.filter(item => !isFolderPlaceholder(item));
             renderFileGrid(files);
-
             renderBreadcrumb();
         } catch (err) {
             console.error(err);
             fileGridDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
-            folderListDiv.innerHTML = `<div class="empty-state">加载失败</div>`;
+            folderListDiv.innerHTML = '<div class="empty-state">加载失败</div>';
             showToast(`加载失败: ${err.message}`, true);
         }
     }
 
-    // 渲染左侧文件夹列表
     function renderFolderList(folders) {
         if (folders.length === 0) {
             folderListDiv.innerHTML = '<div class="empty-state">📭 无子文件夹</div>';
@@ -480,7 +217,6 @@
             div.className = 'folder-item';
             div.innerHTML = `📁 ${folder}`;
             div.onclick = () => {
-                // 进入文件夹
                 currentPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
                 loadCurrentDirectory();
                 selectedFile = null;
@@ -490,7 +226,6 @@
         });
     }
 
-    // 渲染中间文件网格（包含文件和文件夹入口）
     function renderFileGrid(files) {
         if (files.length === 0 && currentPath !== "") {
             fileGridDiv.innerHTML = '<div class="empty-state">📂 此文件夹为空，可上传或创建子文件夹</div>';
@@ -501,10 +236,8 @@
         }
 
         fileGridDiv.innerHTML = '';
-        // 先显示文件夹（如果有需要显示的直接子文件夹？其实左侧已经显示了，但网格中也可以显示）
-        // 简单起见，网格只显示文件，文件夹由左侧导航
         files.forEach(file => {
-            const publicUrl = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
+            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
             const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
             const fileDate = file.created_at ? formatDate(file.created_at) : '-';
             const card = document.createElement('div');
@@ -514,7 +247,6 @@
                 if (e.target.closest('.file-actions')) return;
                 selectedFile = file;
                 updateDetailPanel(file);
-                // 高亮当前选中卡片
                 document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
             };
@@ -537,7 +269,6 @@
             fileGridDiv.appendChild(card);
         });
 
-        // 绑定删除按钮事件（事件委托）
         fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -549,7 +280,6 @@
         });
     }
 
-    // 渲染面包屑
     function renderBreadcrumb() {
         breadcrumbDiv.innerHTML = '';
         const parts = currentPath.split('/').filter(p => p);
@@ -579,17 +309,12 @@
         });
     }
 
-    // 更新右侧详情面板
     function updateDetailPanel(file) {
         if (!file) {
             detailContentDiv.innerHTML = '<div class="empty-state">点击文件查看详情</div>';
             return;
         }
-        const publicUrl = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
-        const ext = file.name.split('.').pop().toLowerCase();
-        const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
-        const isVideo = ['mp4','webm','mov'].includes(ext);
-        const isAudio = ['mp3','wav','ogg','flac'].includes(ext);
+        const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
         detailContentDiv.innerHTML = `
             <div class="detail-preview">
                 ${getPreviewHtml(file.name, publicUrl)}
@@ -604,10 +329,9 @@
         `;
     }
 
-    // 删除文件
     async function deleteFile(filename) {
         try {
-            const { error } = await supabase.storage.from(BUCKET_NAME).remove([filename]);
+            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
             if (error) throw error;
             showToast(`✅ 已删除 ${filename}`);
             if (selectedFile && selectedFile.name === filename) selectedFile = null;
@@ -617,21 +341,18 @@
         }
     }
 
-    // 上传文件（多文件，保存到当前路径）
     async function uploadFiles() {
         const files = Array.from(uploadInput.files);
         if (files.length === 0) {
             showToast('请先选择文件', true);
             return;
         }
-        let successCount = 0;
-        let failCount = 0;
+        let successCount = 0, failCount = 0;
         for (const file of files) {
             let remotePath = currentPath ? `${currentPath}${file.name}` : file.name;
-            // 防止重名冲突（简单加时间戳）
             remotePath = `${Date.now()}_${remotePath.replace(/[^\w.\-]/g, '_')}`;
             try {
-                const { error } = await supabase.storage
+                const { error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .upload(remotePath, file);
                 if (error) throw error;
@@ -647,7 +368,6 @@
         if (successCount > 0) loadCurrentDirectory();
     }
 
-    // 创建文件夹（在当前路径下创建一个以 '/' 结尾的空对象）
     async function createFolder() {
         const folderName = prompt('请输入文件夹名称（仅英文、数字、下划线）', '新文件夹');
         if (!folderName) return;
@@ -657,9 +377,8 @@
             return;
         }
         const folderPath = currentPath ? `${currentPath}${cleanName}/` : `${cleanName}/`;
-        // 上传一个空对象作为文件夹占位符
         try {
-            const { error } = await supabase.storage
+            const { error } = await supabaseClient.storage
                 .from(BUCKET_NAME)
                 .upload(folderPath, new Blob([]), { contentType: 'application/x-directory' });
             if (error) throw error;
@@ -670,13 +389,11 @@
         }
     }
 
-    // 事件绑定
     uploadInput.addEventListener('change', uploadFiles);
     createFolderBtn.addEventListener('click', createFolder);
     createFolderBtnSidebar.addEventListener('click', createFolder);
     refreshBtn.addEventListener('click', () => loadCurrentDirectory());
 
-    // 初始加载
     loadCurrentDirectory();
 </script>
 </body>
