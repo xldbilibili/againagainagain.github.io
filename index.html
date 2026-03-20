@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <link rel="icon" type="image/jpg" href="/offline-1989551806.jpg">
-
-    <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supabase 云盘</title>
@@ -16,49 +8,60 @@
     <style>
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #0a0c10;
             color: #e6e9f0;
-            margin: 0;
-            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
+        /* 顶部栏 */
+        .top-bar {
+            background: #1e2128;
+            border-bottom: 1px solid #2c2f36;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-        .upload-area {
-            background: #1e2128;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-            border: 1px solid #2c2f36;
-        }
-        .upload-controls {
-            display: flex;
+            justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
+        }
+        .title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            display: flex;
             align-items: center;
-            margin-bottom: 16px;
+            gap: 8px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        button, .file-input-label {
+            background: #2c7da0;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button:hover, .file-input-label:hover {
+            background: #1f5e7e;
         }
         .file-input-label {
             background: #2c2f36;
-            padding: 10px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
         .file-input-label:hover {
             background: #3a3e48;
@@ -66,59 +69,112 @@
         input[type="file"] {
             display: none;
         }
-        button {
-            background: #2c7da0;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.9rem;
-        }
-        button:hover {
-            background: #1f5e7e;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        .progress-bar {
-            background: #2c2f36;
-            border-radius: 20px;
-            height: 8px;
-            width: 100%;
+        /* 三栏布局 */
+        .main-layout {
+            display: flex;
+            flex: 1;
             overflow: hidden;
-            margin-top: 16px;
-        }
-        .progress-fill {
-            background: #2c7da0;
-            width: 0%;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-        .file-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            padding: 16px;
             gap: 16px;
         }
-        .file-card {
+        /* 左侧文件夹树 */
+        .sidebar {
+            width: 260px;
             background: #1e2128;
             border-radius: 16px;
             border: 1px solid #2c2f36;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2c2f36;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .folder-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .folder-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .folder-item:hover {
+            background: #2c2f36;
+        }
+        .folder-item.active {
+            background: #2c7da0;
+        }
+        /* 中间内容区 */
+        .content-area {
+            flex: 1;
+            background: #1e2128;
+            border-radius: 16px;
+            border: 1px solid #2c2f36;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .breadcrumb {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2c2f36;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: #1e2128;
+        }
+        .breadcrumb-item {
+            cursor: pointer;
+            color: #9aa2b5;
+            transition: color 0.2s;
+        }
+        .breadcrumb-item:hover {
+            color: #2c7da0;
+        }
+        .breadcrumb-sep {
+            color: #5a5f6e;
+        }
+        .file-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            align-content: start;
+        }
+        .file-card {
+            background: #13161c;
+            border-radius: 12px;
+            border: 1px solid #2c2f36;
+            overflow: hidden;
+            cursor: pointer;
             transition: transform 0.1s, border-color 0.2s;
         }
         .file-card:hover {
-            border-color: #3a3e48;
+            border-color: #2c7da0;
+        }
+        .file-card.selected {
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 2px rgba(44,125,160,0.3);
         }
         .file-preview {
-            background: #13161c;
-            height: 160px;
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            background: #0f1117;
         }
         .file-preview img, .file-preview video {
             max-width: 100%;
@@ -129,18 +185,17 @@
             width: 90%;
         }
         .file-info {
-            padding: 12px;
+            padding: 10px;
         }
         .file-name {
+            font-size: 0.85rem;
             font-weight: 500;
-            margin-bottom: 6px;
             word-break: break-all;
-            font-size: 0.9rem;
+            margin-bottom: 6px;
         }
         .file-meta {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #9aa2b5;
-            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
         }
@@ -151,15 +206,13 @@
         }
         .btn-small {
             background: #2c2f36;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 16px;
             text-decoration: none;
             color: #e6e9f0;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
             cursor: pointer;
+            border: none;
         }
         .btn-small:hover {
             background: #3a3e48;
@@ -170,9 +223,40 @@
         .delete-btn:hover {
             background: #7a3a3a;
         }
+        /* 右侧详情区 */
+        .detail-panel {
+            width: 320px;
+            background: #1e2128;
+            border-radius: 16px;
+            border: 1px solid #2c2f36;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .detail-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2c2f36;
+            font-weight: 500;
+        }
+        .detail-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .detail-preview {
+            background: #13161c;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .detail-info p {
+            margin: 8px 0;
+            word-break: break-all;
+        }
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
             color: #6c757d;
         }
         .toast {
@@ -194,57 +278,82 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 640px) {
-            .file-grid {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 900px) {
+            .detail-panel { width: 260px; }
+            .sidebar { width: 220px; }
+        }
+        @media (max-width: 700px) {
+            .main-layout { flex-direction: column; }
+            .sidebar, .detail-panel { width: 100%; height: 200px; }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📁 Supabase 云盘</h1>
+<div class="top-bar">
+    <div class="title">📁 Supabase 云盘</div>
+    <div class="actions">
+        <label class="file-input-label">
+            📂 上传文件
+            <input type="file" id="uploadInput" multiple>
+        </label>
+        <button id="createFolderBtn">📁 新建文件夹</button>
+        <button id="refreshBtn">🔄 刷新</button>
+    </div>
+</div>
 
-    <div class="upload-area">
-        <div class="upload-controls">
-            <label class="file-input-label">
-                📂 选择文件
-                <input type="file" id="fileInput" multiple>
-            </label>
-            <button id="uploadBtn">⬆️ 上传</button>
-            <button id="refreshBtn">🔄 刷新</button>
+<div class="main-layout">
+    <!-- 左侧：文件夹列表 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span>📁 当前目录</span>
+            <button id="createFolderBtnSidebar" style="background: none; padding: 4px 8px;">+</button>
         </div>
-        <div class="progress-bar" id="progressContainer" style="display: none;">
-            <div class="progress-fill" id="progressFill"></div>
+        <div class="folder-list" id="folderList">
+            <div class="empty-state">暂无文件夹</div>
         </div>
-        <div id="uploadStatus" style="font-size: 0.85rem; margin-top: 8px;"></div>
     </div>
 
-    <div id="fileList" class="file-grid">
-        <div class="empty-state">加载中...</div>
+    <!-- 中间：文件列表 -->
+    <div class="content-area">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="file-grid" id="fileGrid">
+            <div class="empty-state">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 右侧：详情预览 -->
+    <div class="detail-panel">
+        <div class="detail-header">📄 详情</div>
+        <div class="detail-content" id="detailContent">
+            <div class="empty-state">点击文件查看详情</div>
+        </div>
     </div>
 </div>
 
 <script>
     // ==================== Supabase 配置 ====================
-    // 使用你的项目 URL 和 anon key
     const SUPABASE_URL = "https://tcewihcxuvriiigcorqq.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4";
-    const BUCKET_NAME = "music";   // 请确保桶名正确
+    const BUCKET_NAME = "music";
 
-    // 创建客户端实例（只创建一次）
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 当前路径（例如 "folder/subfolder/"）
+    let currentPath = "";
+    let selectedFile = null;        // 当前选中的文件对象 { name, metadata, ... }
+    let allItems = [];              // 当前目录下的所有条目（文件夹+文件）
 
     // DOM 元素
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadInput = document.getElementById('uploadInput');
+    const createFolderBtn = document.getElementById('createFolderBtn');
+    const createFolderBtnSidebar = document.getElementById('createFolderBtnSidebar');
     const refreshBtn = document.getElementById('refreshBtn');
-    const fileListDiv = document.getElementById('fileList');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressFill = document.getElementById('progressFill');
-    const uploadStatus = document.getElementById('uploadStatus');
+    const folderListDiv = document.getElementById('folderList');
+    const fileGridDiv = document.getElementById('fileGrid');
+    const breadcrumbDiv = document.getElementById('breadcrumb');
+    const detailContentDiv = document.getElementById('detailContent');
 
-    // 辅助函数：显示提示消息
+    // ==================== 辅助函数 ====================
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.className = `toast ${isError ? 'error' : ''}`;
@@ -253,23 +362,20 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // 格式化文件大小
     function formatBytes(bytes) {
-        if (bytes === 0) return '0 Bytes';
+        if (!bytes || bytes === 0) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    // 格式化时间（Supabase 返回的 ISO 字符串）
     function formatDate(isoString) {
-        if (!isoString) return '未知';
-        const date = new Date(isoString);
-        return date.toLocaleString();
+        if (!isoString) return '-';
+        return new Date(isoString).toLocaleString();
     }
 
-    // 根据文件名获取预览HTML
+    // 获取文件扩展名对应的预览HTML
     function getPreviewHtml(fileName, publicUrl) {
         const ext = fileName.split('.').pop().toLowerCase();
         if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
@@ -283,930 +389,295 @@
         }
     }
 
-    // 加载文件列表
-    async function loadFiles() {
-        fileListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+    // 判断是否为文件夹占位符对象（以 '/' 结尾且 size 为 0 或无 metadata）
+    function isFolderPlaceholder(obj) {
+        if (obj.name.endsWith('/')) return true;
+        if (!obj.metadata) return false;
+        return obj.metadata.size === 0 && obj.name.includes('/') && obj.name.endsWith('/');
+    }
+
+    // 从列表中提取文件夹（唯一目录名称）
+    function extractFoldersFromItems(items) {
+        const folders = new Set();
+        items.forEach(item => {
+            // 如果是文件夹占位符
+            if (isFolderPlaceholder(item)) {
+                let folderName = item.name;
+                // 去掉当前路径前缀，只取下一级目录名
+                if (currentPath && folderName.startsWith(currentPath)) {
+                    folderName = folderName.substring(currentPath.length);
+                }
+                // 去掉末尾的 /
+                if (folderName.endsWith('/')) folderName = folderName.slice(0, -1);
+                if (folderName && !folderName.includes('/')) { // 只显示直接子文件夹
+                    folders.add(folderName);
+                }
+            } else {
+                // 普通文件，如果名字包含路径，提取直接文件夹
+                if (item.name.includes('/')) {
+                    const relative = currentPath ? item.name.substring(currentPath.length) : item.name;
+                    if (relative.includes('/')) {
+                        const folder = relative.split('/')[0];
+                        if (folder && !folder.includes('/')) folders.add(folder);
+                    }
+                }
+            }
+        });
+        return Array.from(folders).sort();
+    }
+
+    // 加载当前目录内容
+    async function loadCurrentDirectory() {
+        fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+        folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
         try {
-            const { data, error } = await supabaseClient.storage
+            // 列出当前路径下的所有对象（prefix 为 currentPath）
+            const { data, error } = await supabase.storage
                 .from(BUCKET_NAME)
-                .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+                .list(currentPath, { limit: 1000 });
 
             if (error) throw error;
 
-            if (!data || data.length === 0) {
-                fileListDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
-                return;
-            }
-
-            fileListDiv.innerHTML = '';
-            for (const file of data) {
-                const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="file-preview" id="preview-${file.name.replace(/[^a-z0-9]/gi, '_')}">
-                        ${getPreviewHtml(file.name, publicUrl)}
-                    </div>
-                    <div class="file-info">
-                        <div class="file-name" title="${file.name}">${file.name}</div>
-                        <div class="file-meta">
-                            <span>${file.metadata?.size ? formatBytes(file.metadata.size) : '? KB'}</span>
-                            <span>${formatDate(file.created_at)}</span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载</a>
-                            <button class="btn-small delete-btn" data-filename="${file.name}">🗑️ 删除</button>
-                        </div>
-                    </div>
-                `;
-                fileListDiv.appendChild(card);
-            }
-
-            // 绑定删除事件
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const filename = btn.getAttribute('data-filename');
-                    if (confirm(`确定要删除 "${filename}" 吗？`)) {
-                        await deleteFile(filename);
-                    }
-                });
+            // 过滤有效条目
+            const validItems = (data || []).filter(item => {
+                // 排除隐藏文件（如 .folder）
+                if (item.name.startsWith('.')) return false;
+                // 文件夹占位符保留（用于显示）
+                if (isFolderPlaceholder(item)) return true;
+                // 普通文件必须有元数据且大小 > 0
+                if (!item.metadata || item.metadata.size === 0) return false;
+                return true;
             });
+
+            allItems = validItems;
+
+            // 提取文件夹（直接子目录）
+            const folders = extractFoldersFromItems(validItems);
+            renderFolderList(folders);
+
+            // 提取文件（排除文件夹占位符）
+            const files = validItems.filter(item => !isFolderPlaceholder(item));
+            renderFileGrid(files);
+
+            renderBreadcrumb();
         } catch (err) {
             console.error(err);
-            fileListDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
+            fileGridDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
+            folderListDiv.innerHTML = `<div class="empty-state">加载失败</div>`;
             showToast(`加载失败: ${err.message}`, true);
         }
+    }
+
+    // 渲染左侧文件夹列表
+    function renderFolderList(folders) {
+        if (folders.length === 0) {
+            folderListDiv.innerHTML = '<div class="empty-state">📭 无子文件夹</div>';
+            return;
+        }
+        folderListDiv.innerHTML = '';
+        folders.forEach(folder => {
+            const div = document.createElement('div');
+            div.className = 'folder-item';
+            div.innerHTML = `📁 ${folder}`;
+            div.onclick = () => {
+                // 进入文件夹
+                currentPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
+                loadCurrentDirectory();
+                selectedFile = null;
+                updateDetailPanel(null);
+            };
+            folderListDiv.appendChild(div);
+        });
+    }
+
+    // 渲染中间文件网格（包含文件和文件夹入口）
+    function renderFileGrid(files) {
+        if (files.length === 0 && currentPath !== "") {
+            fileGridDiv.innerHTML = '<div class="empty-state">📂 此文件夹为空，可上传或创建子文件夹</div>';
+            return;
+        } else if (files.length === 0) {
+            fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
+            return;
+        }
+
+        fileGridDiv.innerHTML = '';
+        // 先显示文件夹（如果有需要显示的直接子文件夹？其实左侧已经显示了，但网格中也可以显示）
+        // 简单起见，网格只显示文件，文件夹由左侧导航
+        files.forEach(file => {
+            const publicUrl = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
+            const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
+            const fileDate = file.created_at ? formatDate(file.created_at) : '-';
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            if (selectedFile && selectedFile.name === file.name) card.classList.add('selected');
+            card.onclick = (e) => {
+                if (e.target.closest('.file-actions')) return;
+                selectedFile = file;
+                updateDetailPanel(file);
+                // 高亮当前选中卡片
+                document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            };
+            card.innerHTML = `
+                <div class="file-preview">
+                    ${getPreviewHtml(file.name, publicUrl)}
+                </div>
+                <div class="file-info">
+                    <div class="file-name" title="${file.name}">${file.name}</div>
+                    <div class="file-meta">
+                        <span>${fileSize}</span>
+                        <span>${fileDate}</span>
+                    </div>
+                    <div class="file-actions">
+                        <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载</a>
+                        <button class="btn-small delete-btn" data-filename="${file.name}">🗑️ 删除</button>
+                    </div>
+                </div>
+            `;
+            fileGridDiv.appendChild(card);
+        });
+
+        // 绑定删除按钮事件（事件委托）
+        fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const filename = btn.getAttribute('data-filename');
+                if (confirm(`确定要删除 "${filename}" 吗？`)) {
+                    await deleteFile(filename);
+                }
+            });
+        });
+    }
+
+    // 渲染面包屑
+    function renderBreadcrumb() {
+        breadcrumbDiv.innerHTML = '';
+        const parts = currentPath.split('/').filter(p => p);
+        const crumbs = [{ name: '根目录', path: '' }];
+        let path = '';
+        parts.forEach(part => {
+            path += `${part}/`;
+            crumbs.push({ name: part, path });
+        });
+        crumbs.forEach((crumb, idx) => {
+            const span = document.createElement('span');
+            span.className = 'breadcrumb-item';
+            span.innerText = crumb.name;
+            span.onclick = () => {
+                currentPath = crumb.path;
+                loadCurrentDirectory();
+                selectedFile = null;
+                updateDetailPanel(null);
+            };
+            breadcrumbDiv.appendChild(span);
+            if (idx < crumbs.length - 1) {
+                const sep = document.createElement('span');
+                sep.className = 'breadcrumb-sep';
+                sep.innerText = ' / ';
+                breadcrumbDiv.appendChild(sep);
+            }
+        });
+    }
+
+    // 更新右侧详情面板
+    function updateDetailPanel(file) {
+        if (!file) {
+            detailContentDiv.innerHTML = '<div class="empty-state">点击文件查看详情</div>';
+            return;
+        }
+        const publicUrl = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
+        const ext = file.name.split('.').pop().toLowerCase();
+        const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+        const isVideo = ['mp4','webm','mov'].includes(ext);
+        const isAudio = ['mp3','wav','ogg','flac'].includes(ext);
+        detailContentDiv.innerHTML = `
+            <div class="detail-preview">
+                ${getPreviewHtml(file.name, publicUrl)}
+            </div>
+            <div class="detail-info">
+                <p><strong>文件名：</strong> ${file.name}</p>
+                <p><strong>大小：</strong> ${file.metadata?.size ? formatBytes(file.metadata.size) : '-'}</p>
+                <p><strong>上传时间：</strong> ${formatDate(file.created_at)}</p>
+                <p><strong>MIME类型：</strong> ${file.metadata?.mimetype || '-'}</p>
+                <p><strong>下载链接：</strong> <a href="${publicUrl}" target="_blank">点击打开</a></p>
+            </div>
+        `;
     }
 
     // 删除文件
     async function deleteFile(filename) {
         try {
-            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
+            const { error } = await supabase.storage.from(BUCKET_NAME).remove([filename]);
             if (error) throw error;
             showToast(`✅ 已删除 ${filename}`);
-            loadFiles();
+            if (selectedFile && selectedFile.name === filename) selectedFile = null;
+            loadCurrentDirectory();
         } catch (err) {
-            console.error(err);
             showToast(`删除失败: ${err.message}`, true);
         }
     }
 
-    // 上传文件（支持多文件）
+    // 上传文件（多文件，保存到当前路径）
     async function uploadFiles() {
-        const files = Array.from(fileInput.files);
+        const files = Array.from(uploadInput.files);
         if (files.length === 0) {
             showToast('请先选择文件', true);
             return;
         }
-
         let successCount = 0;
         let failCount = 0;
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const fileName = `${Date.now()}_${file.name.replace(/[^\w.\-]/g, '_')}`;
-
-            progressContainer.style.display = 'block';
-            progressFill.style.width = '0%';
-            uploadStatus.innerText = `上传中: ${file.name} (${i+1}/${files.length})`;
-
+        for (const file of files) {
+            let remotePath = currentPath ? `${currentPath}${file.name}` : file.name;
+            // 防止重名冲突（简单加时间戳）
+            remotePath = `${Date.now()}_${remotePath.replace(/[^\w.\-]/g, '_')}`;
             try {
-                const { error } = await supabaseClient.storage
+                const { error } = await supabase.storage
                     .from(BUCKET_NAME)
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-
+                    .upload(remotePath, file);
                 if (error) throw error;
                 successCount++;
                 showToast(`✅ ${file.name} 上传成功`);
             } catch (err) {
-                console.error(err);
                 failCount++;
                 showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
             }
-
-            progressFill.style.width = '100%';
-            await new Promise(r => setTimeout(r, 200));
         }
-
-        progressContainer.style.display = 'none';
-        uploadStatus.innerText = `上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`;
-        fileInput.value = '';
-
-        if (successCount > 0) {
-            loadFiles();
-        }
+        showToast(`上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
+        uploadInput.value = '';
+        if (successCount > 0) loadCurrentDirectory();
     }
 
-    // 绑定事件
-    uploadBtn.addEventListener('click', uploadFiles);
-    refreshBtn.addEventListener('click', loadFiles);
-
-    // 初始加载
-    loadFiles();
-</script>
-</body>
-</html>
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase 云盘</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            box-sizing: border-box;
+    // 创建文件夹（在当前路径下创建一个以 '/' 结尾的空对象）
+    async function createFolder() {
+        const folderName = prompt('请输入文件夹名称（仅英文、数字、下划线）', '新文件夹');
+        if (!folderName) return;
+        const cleanName = folderName.replace(/[^a-zA-Z0-9_]/g, '_');
+        if (!cleanName) {
+            showToast('无效的文件夹名称', true);
+            return;
         }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #0a0c10;
-            color: #e6e9f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .upload-area {
-            background: #1e2128;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-            border: 1px solid #2c2f36;
-        }
-        .upload-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .file-input-label {
-            background: #2c2f36;
-            padding: 10px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .file-input-label:hover {
-            background: #3a3e48;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        button {
-            background: #2c7da0;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.9rem;
-        }
-        button:hover {
-            background: #1f5e7e;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        .progress-bar {
-            background: #2c2f36;
-            border-radius: 20px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-            margin-top: 16px;
-        }
-        .progress-fill {
-            background: #2c7da0;
-            width: 0%;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-        .file-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-        .file-card {
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            overflow: hidden;
-            transition: transform 0.1s, border-color 0.2s;
-        }
-        .file-card:hover {
-            border-color: #3a3e48;
-        }
-        .file-preview {
-            background: #13161c;
-            height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .file-preview img, .file-preview video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .file-preview audio {
-            width: 90%;
-        }
-        .file-info {
-            padding: 12px;
-        }
-        .file-name {
-            font-weight: 500;
-            margin-bottom: 6px;
-            word-break: break-all;
-            font-size: 0.9rem;
-        }
-        .file-meta {
-            font-size: 0.75rem;
-            color: #9aa2b5;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .file-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .btn-small {
-            background: #2c2f36;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            border-radius: 20px;
-            text-decoration: none;
-            color: #e6e9f0;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        .btn-small:hover {
-            background: #3a3e48;
-        }
-        .delete-btn {
-            background: #5a2a2a;
-        }
-        .delete-btn:hover {
-            background: #7a3a3a;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e2128;
-            border-left: 4px solid #2c7da0;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: fadeIn 0.2s;
-        }
-        .toast.error {
-            border-left-color: #dc3545;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 640px) {
-            .file-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <h1>📁 Supabase 云盘</h1>
-
-    <div class="upload-area">
-        <div class="upload-controls">
-            <label class="file-input-label">
-                📂 选择文件
-                <input type="file" id="fileInput" multiple>
-            </label>
-            <button id="uploadBtn">⬆️ 上传</button>
-            <button id="refreshBtn">🔄 刷新</button>
-        </div>
-        <div class="progress-bar" id="progressContainer" style="display: none;">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div id="uploadStatus" style="font-size: 0.85rem; margin-top: 8px;"></div>
-    </div>
-
-    <div id="fileList" class="file-grid">
-        <div class="empty-state">加载中...</div>
-    </div>
-</div>
-
-<script>
-    // ==================== Supabase 配置 ====================
-    // 使用你的项目 URL 和 anon key
-    const SUPABASE_URL = "https://tcewihcxuvriiigcorqq.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4";
-    const BUCKET_NAME = "music";   // 请确保桶名正确
-
-    // 创建客户端实例（只创建一次）
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // DOM 元素
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const fileListDiv = document.getElementById('fileList');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressFill = document.getElementById('progressFill');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    // 辅助函数：显示提示消息
-    function showToast(message, isError = false) {
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    // 格式化文件大小
-    function formatBytes(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    // 格式化时间（Supabase 返回的 ISO 字符串）
-    function formatDate(isoString) {
-        if (!isoString) return '未知';
-        const date = new Date(isoString);
-        return date.toLocaleString();
-    }
-
-    // 根据文件名获取预览HTML
-    function getPreviewHtml(fileName, publicUrl) {
-        const ext = fileName.split('.').pop().toLowerCase();
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-            return `<img src="${publicUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        } else if (['mp4', 'webm', 'mov'].includes(ext)) {
-            return `<video controls style="max-width:100%; max-height:100%;"><source src="${publicUrl}" type="video/${ext}"></video>`;
-        } else if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) {
-            return `<audio controls style="width:90%;"><source src="${publicUrl}" type="audio/${ext}"></audio>`;
-        } else {
-            return `<div style="font-size: 3rem;">📄</div>`;
-        }
-    }
-
-    // 加载文件列表
-    async function loadFiles() {
-        fileListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+        const folderPath = currentPath ? `${currentPath}${cleanName}/` : `${cleanName}/`;
+        // 上传一个空对象作为文件夹占位符
         try {
-            const { data, error } = await supabaseClient.storage
+            const { error } = await supabase.storage
                 .from(BUCKET_NAME)
-                .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-
+                .upload(folderPath, new Blob([]), { contentType: 'application/x-directory' });
             if (error) throw error;
-
-            if (!data || data.length === 0) {
-                fileListDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
-                return;
-            }
-
-            fileListDiv.innerHTML = '';
-            for (const file of data) {
-                const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="file-preview" id="preview-${file.name.replace(/[^a-z0-9]/gi, '_')}">
-                        ${getPreviewHtml(file.name, publicUrl)}
-                    </div>
-                    <div class="file-info">
-                        <div class="file-name" title="${file.name}">${file.name}</div>
-                        <div class="file-meta">
-                            <span>${file.metadata?.size ? formatBytes(file.metadata.size) : '? KB'}</span>
-                            <span>${formatDate(file.created_at)}</span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载</a>
-                            <button class="btn-small delete-btn" data-filename="${file.name}">🗑️ 删除</button>
-                        </div>
-                    </div>
-                `;
-                fileListDiv.appendChild(card);
-            }
-
-            // 绑定删除事件
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const filename = btn.getAttribute('data-filename');
-                    if (confirm(`确定要删除 "${filename}" 吗？`)) {
-                        await deleteFile(filename);
-                    }
-                });
-            });
+            showToast(`✅ 文件夹 "${cleanName}" 创建成功`);
+            loadCurrentDirectory();
         } catch (err) {
-            console.error(err);
-            fileListDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
-            showToast(`加载失败: ${err.message}`, true);
+            showToast(`创建失败: ${err.message}`, true);
         }
     }
 
-    // 删除文件
-    async function deleteFile(filename) {
-        try {
-            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
-            if (error) throw error;
-            showToast(`✅ 已删除 ${filename}`);
-            loadFiles();
-        } catch (err) {
-            console.error(err);
-            showToast(`删除失败: ${err.message}`, true);
-        }
-    }
-
-    // 上传文件（支持多文件）
-    async function uploadFiles() {
-        const files = Array.from(fileInput.files);
-        if (files.length === 0) {
-            showToast('请先选择文件', true);
-            return;
-        }
-
-        let successCount = 0;
-        let failCount = 0;
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const fileName = `${Date.now()}_${file.name.replace(/[^\w.\-]/g, '_')}`;
-
-            progressContainer.style.display = 'block';
-            progressFill.style.width = '0%';
-            uploadStatus.innerText = `上传中: ${file.name} (${i+1}/${files.length})`;
-
-            try {
-                const { error } = await supabaseClient.storage
-                    .from(BUCKET_NAME)
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-
-                if (error) throw error;
-                successCount++;
-                showToast(`✅ ${file.name} 上传成功`);
-            } catch (err) {
-                console.error(err);
-                failCount++;
-                showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
-            }
-
-            progressFill.style.width = '100%';
-            await new Promise(r => setTimeout(r, 200));
-        }
-
-        progressContainer.style.display = 'none';
-        uploadStatus.innerText = `上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`;
-        fileInput.value = '';
-
-        if (successCount > 0) {
-            loadFiles();
-        }
-    }
-
-    // 绑定事件
-    uploadBtn.addEventListener('click', uploadFiles);
-    refreshBtn.addEventListener('click', loadFiles);
+    // 事件绑定
+    uploadInput.addEventListener('change', uploadFiles);
+    createFolderBtn.addEventListener('click', createFolder);
+    createFolderBtnSidebar.addEventListener('click', createFolder);
+    refreshBtn.addEventListener('click', () => loadCurrentDirectory());
 
     // 初始加载
-    loadFiles();
-</script>
-</body>
-</html>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase 云盘</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #0a0c10;
-            color: #e6e9f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .upload-area {
-            background: #1e2128;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-            border: 1px solid #2c2f36;
-        }
-        .upload-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .file-input-label {
-            background: #2c2f36;
-            padding: 10px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .file-input-label:hover {
-            background: #3a3e48;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        button {
-            background: #2c7da0;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.9rem;
-        }
-        button:hover {
-            background: #1f5e7e;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        .progress-bar {
-            background: #2c2f36;
-            border-radius: 20px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-            margin-top: 16px;
-        }
-        .progress-fill {
-            background: #2c7da0;
-            width: 0%;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-        .file-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-        .file-card {
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            overflow: hidden;
-            transition: transform 0.1s, border-color 0.2s;
-        }
-        .file-card:hover {
-            border-color: #3a3e48;
-        }
-        .file-preview {
-            background: #13161c;
-            height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .file-preview img, .file-preview video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .file-preview audio {
-            width: 90%;
-        }
-        .file-info {
-            padding: 12px;
-        }
-        .file-name {
-            font-weight: 500;
-            margin-bottom: 6px;
-            word-break: break-all;
-            font-size: 0.9rem;
-        }
-        .file-meta {
-            font-size: 0.75rem;
-            color: #9aa2b5;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .file-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .btn-small {
-            background: #2c2f36;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            border-radius: 20px;
-            text-decoration: none;
-            color: #e6e9f0;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        .btn-small:hover {
-            background: #3a3e48;
-        }
-        .delete-btn {
-            background: #5a2a2a;
-        }
-        .delete-btn:hover {
-            background: #7a3a3a;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e2128;
-            border-left: 4px solid #2c7da0;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: fadeIn 0.2s;
-        }
-        .toast.error {
-            border-left-color: #dc3545;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 640px) {
-            .file-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <h1>📁 Supabase 云盘</h1>
-
-    <div class="upload-area">
-        <div class="upload-controls">
-            <label class="file-input-label">
-                📂 选择文件
-                <input type="file" id="fileInput" multiple>
-            </label>
-            <button id="uploadBtn">⬆️ 上传</button>
-            <button id="refreshBtn">🔄 刷新</button>
-        </div>
-        <div class="progress-bar" id="progressContainer" style="display: none;">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div id="uploadStatus" style="font-size: 0.85rem; margin-top: 8px;"></div>
-    </div>
-
-    <div id="fileList" class="file-grid">
-        <div class="empty-state">加载中...</div>
-    </div>
-</div>
-
-<script>
-    // ==================== Supabase 配置 ====================
-    // 使用你的项目 URL 和 anon key
-    const SUPABASE_URL = "https://tcewihcxuvriiigcorqq.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4";
-    const BUCKET_NAME = "music";   // 请确保桶名正确
-
-    // 创建客户端实例（只创建一次）
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // DOM 元素
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const fileListDiv = document.getElementById('fileList');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressFill = document.getElementById('progressFill');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    // 辅助函数：显示提示消息
-    function showToast(message, isError = false) {
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    // 格式化文件大小
-    function formatBytes(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    // 格式化时间（Supabase 返回的 ISO 字符串）
-    function formatDate(isoString) {
-        if (!isoString) return '未知';
-        const date = new Date(isoString);
-        return date.toLocaleString();
-    }
-
-    // 根据文件名获取预览HTML
-    function getPreviewHtml(fileName, publicUrl) {
-        const ext = fileName.split('.').pop().toLowerCase();
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-            return `<img src="${publicUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        } else if (['mp4', 'webm', 'mov'].includes(ext)) {
-            return `<video controls style="max-width:100%; max-height:100%;"><source src="${publicUrl}" type="video/${ext}"></video>`;
-        } else if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) {
-            return `<audio controls style="width:90%;"><source src="${publicUrl}" type="audio/${ext}"></audio>`;
-        } else {
-            return `<div style="font-size: 3rem;">📄</div>`;
-        }
-    }
-
-    // 加载文件列表
-    async function loadFiles() {
-        fileListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
-        try {
-            const { data, error } = await supabaseClient.storage
-                .from(BUCKET_NAME)
-                .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-                fileListDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
-                return;
-            }
-
-            fileListDiv.innerHTML = '';
-            for (const file of data) {
-                const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="file-preview" id="preview-${file.name.replace(/[^a-z0-9]/gi, '_')}">
-                        ${getPreviewHtml(file.name, publicUrl)}
-                    </div>
-                    <div class="file-info">
-                        <div class="file-name" title="${file.name}">${file.name}</div>
-                        <div class="file-meta">
-                            <span>${file.metadata?.size ? formatBytes(file.metadata.size) : '? KB'}</span>
-                            <span>${formatDate(file.created_at)}</span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载</a>
-                            <button class="btn-small delete-btn" data-filename="${file.name}">🗑️ 删除</button>
-                        </div>
-                    </div>
-                `;
-                fileListDiv.appendChild(card);
-            }
-
-            // 绑定删除事件
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const filename = btn.getAttribute('data-filename');
-                    if (confirm(`确定要删除 "${filename}" 吗？`)) {
-                        await deleteFile(filename);
-                    }
-                });
-            });
-        } catch (err) {
-            console.error(err);
-            fileListDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
-            showToast(`加载失败: ${err.message}`, true);
-        }
-    }
-
-    // 删除文件
-    async function deleteFile(filename) {
-        try {
-            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
-            if (error) throw error;
-            showToast(`✅ 已删除 ${filename}`);
-            loadFiles();
-        } catch (err) {
-            console.error(err);
-            showToast(`删除失败: ${err.message}`, true);
-        }
-    }
-
-    // 上传文件（支持多文件）
-    async function uploadFiles() {
-        const files = Array.from(fileInput.files);
-        if (files.length === 0) {
-            showToast('请先选择文件', true);
-            return;
-        }
-
-        let successCount = 0;
-        let failCount = 0;
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const fileName = `${Date.now()}_${file.name.replace(/[^\w.\-]/g, '_')}`;
-
-            progressContainer.style.display = 'block';
-            progressFill.style.width = '0%';
-            uploadStatus.innerText = `上传中: ${file.name} (${i+1}/${files.length})`;
-
-            try {
-                const { error } = await supabaseClient.storage
-                    .from(BUCKET_NAME)
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-
-                if (error) throw error;
-                successCount++;
-                showToast(`✅ ${file.name} 上传成功`);
-            } catch (err) {
-                console.error(err);
-                failCount++;
-                showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
-            }
-
-            progressFill.style.width = '100%';
-            await new Promise(r => setTimeout(r, 200));
-        }
-
-        progressContainer.style.display = 'none';
-        uploadStatus.innerText = `上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`;
-        fileInput.value = '';
-
-        if (successCount > 0) {
-            loadFiles();
-        }
-    }
-
-    // 绑定事件
-    uploadBtn.addEventListener('click', uploadFiles);
-    refreshBtn.addEventListener('click', loadFiles);
-
-    // 初始加载
-    loadFiles();
+    loadCurrentDirectory();
 </script>
 </body>
 </html>
