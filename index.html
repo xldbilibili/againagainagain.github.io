@@ -365,32 +365,44 @@
     }
 
     async function uploadFiles() {
-        const files = Array.from(uploadInput.files);
-        if (files.length === 0) {
-            showToast('请先选择文件', true);
-            return;
-        }
-        let successCount = 0, failCount = 0;
-        for (const file of files) {
-            let remotePath = currentPath ? `${currentPath}${file.name}` : file.name;
-            remotePath = `${Date.now()}_${remotePath.replace(/[^\w.\-]/g, '_')}`;
-            try {
-                const { error } = await supabaseClient.storage
-                    .from(BUCKET_NAME)
-                    .upload(remotePath, file);
-                if (error) throw error;
-                successCount++;
-                showToast(`✅ ${file.name} 上传成功`);
-            } catch (err) {
-                failCount++;
-                showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
-            }
-        }
-        showToast(`上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
-        uploadInput.value = '';
-        if (successCount > 0) loadCurrentDirectory();
+    console.log('📂 当前路径:', currentPath);  // 添加这行
+    const files = Array.from(uploadInput.files);
+    if (files.length === 0) {
+        showToast('请先选择文件', true);
+        return;
     }
 
+    let successCount = 0, failCount = 0;
+    for (const file of files) {
+        // 构建远程路径：当前路径 + 时间戳 + 原始文件名（去除特殊字符）
+        let remotePath = '';
+        if (currentPath) {
+            // 确保 currentPath 不以斜杠结尾时补上（我们的代码已经保证有斜杠，但保险）
+            const prefix = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+            remotePath = prefix;
+        }
+        // 添加时间戳防止重名（可选，如果你希望保留原始文件名，可去掉时间戳）
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/[^\w.\-]/g, '_');
+        remotePath += `${timestamp}_${safeName}`;
+
+        try {
+            const { error } = await supabaseClient.storage
+                .from(BUCKET_NAME)
+                .upload(remotePath, file);
+            if (error) throw error;
+            successCount++;
+            showToast(`✅ ${file.name} 上传成功`);
+        } catch (err) {
+            failCount++;
+            showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
+        }
+    }
+
+    showToast(`上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
+    uploadInput.value = '';
+    if (successCount > 0) loadCurrentDirectory();
+}
     async function createFolder() {
         const folderName = prompt('请输入文件夹名称（仅英文、数字、下划线）', '新文件夹');
         if (!folderName) return;
