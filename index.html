@@ -134,17 +134,26 @@
     }
 
     function getPreviewHtml(fileName, publicUrl) {
-        const ext = fileName.split('.').pop().toLowerCase();
-        if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
-            return `<img src="${publicUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        } else if (['mp4','webm','mov'].includes(ext)) {
-            return `<video controls style="max-width:100%; max-height:100%;"><source src="${publicUrl}" type="video/${ext}"></video>`;
-        } else if (['mp3','wav','ogg','flac'].includes(ext)) {
-            return `<audio controls style="width:90%;"><source src="${publicUrl}" type="audio/${ext}"></audio>`;
-        } else {
-            return `<div style="font-size: 3rem;">📄</div>`;
-        }
+    // 确保 URL 被正确编码
+    const encodedUrl = encodeURI(publicUrl);
+    const ext = fileName.split('.').pop().toLowerCase();
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+        return `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
+    } else if (['mp4', 'webm', 'mov'].includes(ext)) {
+        return `<video controls style="max-width:100%; max-height:100%;" onerror="this.onerror=null;console.error('视频加载失败')">
+                    <source src="${encodedUrl}" type="video/${ext}">
+                    您的浏览器不支持视频播放。
+                </video>`;
+    } else if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) {
+        return `<audio controls style="width:90%;" onerror="this.onerror=null;console.error('音频加载失败')">
+                    <source src="${encodedUrl}" type="audio/${ext}">
+                    您的浏览器不支持音频播放。
+                </audio>`;
+    } else {
+        return `<div style="font-size: 3rem;">📄</div>`;
     }
+}
 
     function isFolderPlaceholder(obj) {
         if (obj.name.endsWith('/')) return true;
@@ -250,6 +259,7 @@
     }
 
     function renderFileGrid(files) {
+        const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
         if (files.length === 0 && currentPath !== "") {
             fileGridDiv.innerHTML = '<div class="empty-state">📂 此文件夹为空，可上传或创建子文件夹</div>';
             return;
@@ -363,7 +373,43 @@
             showToast(`删除失败: ${err.message}`, true);
         }
     }
+    function updateDetailPanel(file) {
+    if (!file) {
+        detailContentDiv.innerHTML = '<div class="empty-state">点击文件查看详情</div>';
+        return;
+    }
+    const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(file.name).data.publicUrl;
+    const encodedUrl = encodeURI(publicUrl);
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+    const isVideo = ['mp4','webm','mov'].includes(ext);
+    const isAudio = ['mp3','wav','ogg','flac'].includes(ext);
 
+    // 根据类型选择预览方式
+    let previewHtml = '';
+    if (isImage) {
+        previewHtml = `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:200px; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
+    } else if (isVideo) {
+        previewHtml = `<video controls style="max-width:100%; max-height:200px;"><source src="${encodedUrl}" type="video/${ext}">无法播放</video>`;
+    } else if (isAudio) {
+        previewHtml = `<audio controls style="width:100%;"><source src="${encodedUrl}" type="audio/${ext}">无法播放</audio>`;
+    } else {
+        previewHtml = `<div style="font-size: 3rem; text-align:center;">📄</div>`;
+    }
+
+    detailContentDiv.innerHTML = `
+        <div class="detail-preview">
+            ${previewHtml}
+        </div>
+        <div class="detail-info">
+            <p><strong>文件名：</strong> ${file.name}</p>
+            <p><strong>大小：</strong> ${file.metadata?.size ? formatBytes(file.metadata.size) : '-'}</p>
+            <p><strong>上传时间：</strong> ${formatDate(file.created_at)}</p>
+            <p><strong>MIME类型：</strong> ${file.metadata?.mimetype || '-'}</p>
+            <p><strong>下载链接：</strong> <a href="${encodedUrl}" target="_blank">点击打开</a></p>
+        </div>
+    `;
+}
     async function uploadFiles() {
     console.log('📂 当前路径:', currentPath);  // 添加这行
     const files = Array.from(uploadInput.files);
