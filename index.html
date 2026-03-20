@@ -153,27 +153,40 @@
     }
 
     function extractFoldersFromItems(items) {
-        const folders = new Set();
-        items.forEach(item => {
-            if (isFolderPlaceholder(item)) {
-                let folderName = item.name;
-                if (currentPath && folderName.startsWith(currentPath)) {
-                    folderName = folderName.substring(currentPath.length);
-                }
-                if (folderName.endsWith('/')) folderName = folderName.slice(0, -1);
-                if (folderName && !folderName.includes('/')) folders.add(folderName);
-            } else {
-                if (item.name.includes('/')) {
-                    const relative = currentPath ? item.name.substring(currentPath.length) : item.name;
-                    if (relative.includes('/')) {
-                        const folder = relative.split('/')[0];
-                        if (folder && !folder.includes('/')) folders.add(folder);
-                    }
+    const folders = new Set();
+    items.forEach(item => {
+        // 情况1：显式文件夹占位符（以 '/' 结尾）
+        if (item.name.endsWith('/')) {
+            let folderName = item.name;
+            // 去掉当前路径前缀，只保留相对路径
+            if (currentPath && folderName.startsWith(currentPath)) {
+                folderName = folderName.substring(currentPath.length);
+            }
+            // 去掉末尾的 '/'
+            folderName = folderName.replace(/\/+$/, '');
+            // 确保是直接子文件夹（不包含 '/'）
+            if (folderName && !folderName.includes('/')) {
+                folders.add(folderName);
+            }
+        }
+        // 情况2：普通文件，如果文件名包含 '/'，提取第一级目录作为虚拟文件夹
+        else if (item.name.includes('/')) {
+            let relative = item.name;
+            if (currentPath && item.name.startsWith(currentPath)) {
+                relative = item.name.substring(currentPath.length);
+            }
+            // 如果 relative 包含 '/', 则第一段即为直接子文件夹
+            if (relative.includes('/')) {
+                const folder = relative.split('/')[0];
+                if (folder && !folder.includes('/')) {
+                    folders.add(folder);
                 }
             }
-        });
-        return Array.from(folders).sort();
-    }
+        }
+    });
+    console.log('📁 提取到的文件夹:', Array.from(folders));
+    return Array.from(folders).sort();
+}
 
     async function loadCurrentDirectory() {
         fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
@@ -184,7 +197,7 @@
                 .list(currentPath, { limit: 1000 });
 
             if (error) throw error;
-
+            console.log('🔍 list 返回数据:', data); // 添加调试输出
             const validItems = (data || []).filter(item => {
                 if (item.name.startsWith('.')) return false;
                 if (isFolderPlaceholder(item)) return true;
