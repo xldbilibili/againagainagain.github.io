@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGAIN..</title>
+    <title>Supabase AGAIN..</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -48,8 +49,15 @@
         .file-input-label:hover { background: #3a3e48; }
         input[type="file"] { display: none; }
 
-        /* 三栏布局 */
-        .main-layout { display: flex; flex: 1; overflow: hidden; padding: 16px; gap: 16px; }
+        /* 主布局 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 16px;
+            gap: 16px;
+        }
+        /* 左侧文件夹树 */
         .sidebar {
             width: 260px;
             background: #1e2128;
@@ -89,6 +97,7 @@
         }
         .folder-item:hover .folder-delete { display: inline-block; }
 
+        /* 中间内容区 */
         .content-area {
             flex: 1;
             background: #1e2128;
@@ -111,7 +120,6 @@
         .breadcrumb-item:hover { color: #2c7da0; }
         .breadcrumb-sep { color: #5a5f6e; }
 
-        /* 文件网格工具栏 */
         .file-toolbar {
             padding: 8px 16px;
             border-bottom: 1px solid #2c2f36;
@@ -119,14 +127,10 @@
             justify-content: space-between;
             align-items: center;
         }
-        .select-all {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .delete-selected {
-            background: #5a2a2a;
-        }
+        .select-all { display: flex; align-items: center; gap: 8px; }
+        .delete-selected { background: #5a2a2a; }
+        .batch-download { background: #2c7da0; }
+
         .file-grid {
             flex: 1;
             overflow-y: auto;
@@ -183,6 +187,7 @@
         .delete-btn { background: #5a2a2a; }
         .delete-btn:hover { background: #7a3a3a; }
 
+        /* 右侧详情区 */
         .detail-panel {
             width: 320px;
             background: #1e2128;
@@ -202,43 +207,99 @@
             margin-bottom: 16px;
         }
         .detail-info p { margin: 8px 0; word-break: break-all; }
+
+        /* 传输中心面板 */
+        .transfer-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 360px;
+            background: #1e2128;
+            border: 1px solid #2c2f36;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+        .transfer-header {
+            padding: 12px 16px;
+            background: #2c2f36;
+            border-radius: 16px 16px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+        }
+        .transfer-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px;
+            display: none;
+        }
+        .transfer-panel.open .transfer-content { display: block; }
+        .transfer-item {
+            background: #13161c;
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        .transfer-name { font-weight: 500; word-break: break-all; }
+        .transfer-progress {
+            background: #2c2f36;
+            height: 4px;
+            border-radius: 2px;
+            margin: 6px 0;
+            overflow: hidden;
+        }
+        .transfer-progress-bar {
+            background: #2c7da0;
+            width: 0%;
+            height: 100%;
+            transition: width 0.2s;
+        }
+        .transfer-status { font-size: 0.7rem; color: #9aa2b5; margin-top: 4px; }
+        .transfer-cancel {
+            background: none;
+            color: #dc3545;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
         .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; }
         .toast {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 20px;
             background: #1e2128;
             border-left: 4px solid #2c7da0;
             padding: 12px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
+            z-index: 1001;
             animation: fadeIn 0.2s;
         }
         .toast.error { border-left-color: #dc3545; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 拖拽上传高亮区域 */
-        .drag-overlay {
+        /* 右键菜单 */
+        .context-menu {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(44,125,160,0.3);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            opacity: 0;
+            background: #1e2128;
+            border: 1px solid #2c2f36;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
         }
-        .drag-overlay.active { opacity: 1; }
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .context-menu-item:hover { background: #2c2f36; }
 
         @media (max-width: 900px) { .detail-panel { width: 260px; } .sidebar { width: 220px; } }
         @media (max-width: 700px) { .main-layout { flex-direction: column; } .sidebar, .detail-panel { width: 100%; height: 200px; } }
@@ -246,7 +307,7 @@
 </head>
 <body>
 <div class="top-bar">
-    <div class="title">📁 Supabase 云盘</div>
+    <div class="title">飞大干啥也不是..</div>
     <div class="actions">
         <label class="file-input-label">
             📂 上传文件
@@ -272,7 +333,10 @@
             <div class="select-all">
                 <input type="checkbox" id="selectAllCheckbox"> <label for="selectAllCheckbox">全选</label>
             </div>
-            <button id="deleteSelectedBtn" class="delete-selected">🗑️ 删除选中</button>
+            <div>
+                <button id="batchDownloadBtn" class="batch-download">📦 批量下载 (ZIP)</button>
+                <button id="deleteSelectedBtn" class="delete-selected">🗑️ 删除选中</button>
+            </div>
         </div>
         <div class="file-grid" id="fileGrid"><div class="empty-state">加载中...</div></div>
     </div>
@@ -283,7 +347,23 @@
     </div>
 </div>
 
-<div id="dragOverlay" class="drag-overlay">📂 拖放文件到此处上传</div>
+<!-- 传输中心 -->
+<div class="transfer-panel" id="transferPanel">
+    <div class="transfer-header">
+        <span>📦 传输中心</span>
+        <span>▼</span>
+    </div>
+    <div class="transfer-content" id="transferContent">
+        <div class="empty-state">暂无传输任务</div>
+    </div>
+</div>
+
+<!-- 右键菜单 -->
+<div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" data-action="download">⬇️ 下载</div>
+    <div class="context-menu-item" data-action="delete">🗑️ 删除</div>
+    <div class="context-menu-item" data-action="downloadFolder">📦 打包下载文件夹</div>
+</div>
 
 <script>
     // ==================== Supabase 配置 ====================
@@ -297,6 +377,13 @@
     let selectedFile = null;
     let selectedFilePaths = new Set(); // 存储选中的文件完整路径
 
+    // 上传任务管理
+    let uploadTasks = new Map(); // key: 任务id, value: { xhr, fileName, status, progress }
+    let nextTaskId = 1;
+    const MAX_CONCURRENT = 3;
+    let activeUploads = 0;
+    let pendingUploadQueue = []; // 待上传文件列表 { file, remotePath }
+
     // DOM 元素
     const uploadInput = document.getElementById('uploadInput');
     const createFolderBtn = document.getElementById('createFolderBtn');
@@ -309,7 +396,12 @@
     const fileToolbar = document.getElementById('fileToolbar');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-    const dragOverlay = document.getElementById('dragOverlay');
+    const batchDownloadBtn = document.getElementById('batchDownloadBtn');
+    const transferPanel = document.getElementById('transferPanel');
+    const transferContent = document.getElementById('transferContent');
+    const contextMenu = document.getElementById('contextMenu');
+
+    let currentContextTarget = null; // 右键点击的目标 { type: 'file'|'folder', name, path }
 
     // ==================== 辅助函数 ====================
     function showToast(message, isError = false) {
@@ -347,68 +439,279 @@
         }
     }
 
-    function isFolderPlaceholder(item) {
-        const name = item.name;
-        if (!name) return true;
-        if (name.endsWith('/')) return true;
-        if (!item.metadata || item.metadata.size === 0) return true;
-        return false;
-    }
-
-    // 提取当前路径下的直接子文件夹
-    function extractFoldersFromItems(items) {
-        const folders = new Set();
-        items.forEach(item => {
-            const name = item.name;
-            if (!name || name === '.emptyFolderPlaceholder') return;
-            if (name.endsWith('/')) {
-                let folderName = name;
-                if (currentPath && folderName.startsWith(currentPath)) {
-                    folderName = folderName.substring(currentPath.length);
-                }
-                folderName = folderName.replace(/\/+$/, '');
-                if (folderName && !folderName.includes('/')) folders.add(folderName);
-            } else if (!item.metadata || item.metadata.size === 0) {
-                if (!name.includes('/')) folders.add(name);
-            } else if (name.includes('/')) {
-                let relative = name;
-                if (currentPath && name.startsWith(currentPath)) {
-                    relative = name.substring(currentPath.length);
-                }
-                if (relative.includes('/')) {
-                    const folder = relative.split('/')[0];
-                    if (folder && !folder.includes('/')) folders.add(folder);
-                }
-            }
+    // 更新传输中心显示
+    function updateTransferUI() {
+        if (uploadTasks.size === 0 && pendingUploadQueue.length === 0) {
+            transferContent.innerHTML = '<div class="empty-state">暂无传输任务</div>';
+            return;
+        }
+        let html = '';
+        for (const [id, task] of uploadTasks.entries()) {
+            html += `
+                <div class="transfer-item" data-task-id="${id}">
+                    <div class="transfer-name">📤 ${task.fileName}</div>
+                    <div class="transfer-progress"><div class="transfer-progress-bar" style="width: ${task.progress}%"></div></div>
+                    <div class="transfer-status">${task.status} (${task.progress}%) <span class="transfer-cancel" data-task-id="${id}">取消</span></div>
+                </div>
+            `;
+        }
+        for (let i = 0; i < pendingUploadQueue.length; i++) {
+            const p = pendingUploadQueue[i];
+            html += `
+                <div class="transfer-item">
+                    <div class="transfer-name">⏳ ${p.file.name}</div>
+                    <div class="transfer-status">等待上传</div>
+                </div>
+            `;
+        }
+        transferContent.innerHTML = html;
+        // 绑定取消事件
+        document.querySelectorAll('.transfer-cancel').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const taskId = parseInt(btn.dataset.taskId);
+                cancelUpload(taskId);
+            });
         });
-        return Array.from(folders).sort();
     }
 
-    // 递归删除文件夹及其所有内容
-    async function deleteFolderRecursive(folderPath) {
-        // 确保 folderPath 以 / 结尾
+    // 取消上传
+    function cancelUpload(taskId) {
+        const task = uploadTasks.get(taskId);
+        if (task && task.xhr) {
+            task.xhr.abort();
+            task.status = '已取消';
+            uploadTasks.delete(taskId);
+            activeUploads--;
+            showToast(`已取消上传: ${task.fileName}`);
+            processQueue();
+            updateTransferUI();
+        }
+    }
+
+    // 实际执行上传（使用 XHR 带进度）
+    async function performUpload(file, remotePath, taskId) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${remotePath}`;
+        const xhr = new XMLHttpRequest();
+        const task = uploadTasks.get(taskId);
+        if (task) task.xhr = xhr;
+
+        return new Promise((resolve, reject) => {
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const taskItem = uploadTasks.get(taskId);
+                    if (taskItem) {
+                        taskItem.progress = percent;
+                        taskItem.status = '上传中';
+                        updateTransferUI();
+                    }
+                }
+            });
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const taskItem = uploadTasks.get(taskId);
+                    if (taskItem) {
+                        taskItem.status = '完成';
+                        taskItem.progress = 100;
+                        updateTransferUI();
+                        setTimeout(() => {
+                            uploadTasks.delete(taskId);
+                            updateTransferUI();
+                        }, 1000);
+                    }
+                    resolve();
+                } else {
+                    reject(new Error(`上传失败: ${xhr.status}`));
+                }
+                activeUploads--;
+                processQueue();
+            };
+            xhr.onerror = () => {
+                reject(new Error('网络错误'));
+                activeUploads--;
+                processQueue();
+            };
+            xhr.onabort = () => {
+                reject(new Error('已取消'));
+                activeUploads--;
+                processQueue();
+            };
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+            xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+            xhr.send(formData);
+        });
+    }
+
+    // 添加上传任务
+    async function addUpload(file, remotePath) {
+        const taskId = nextTaskId++;
+        uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
+        updateTransferUI();
+        pendingUploadQueue.push({ file, remotePath, taskId });
+        processQueue();
+    }
+
+    // 处理队列
+    function processQueue() {
+        while (activeUploads < MAX_CONCURRENT && pendingUploadQueue.length > 0) {
+            const item = pendingUploadQueue.shift();
+            activeUploads++;
+            const task = uploadTasks.get(item.taskId);
+            if (task) task.status = '上传中';
+            updateTransferUI();
+            performUpload(item.file, item.remotePath, item.taskId).catch(err => {
+                showToast(`${item.file.name} 上传失败: ${err.message}`, true);
+                uploadTasks.delete(item.taskId);
+                updateTransferUI();
+            });
+        }
+    }
+
+    // 上传入口（多文件）
+    async function uploadFiles(fileList) {
+        const files = Array.from(fileList);
+        if (files.length === 0) return;
+        for (const file of files) {
+            let remotePath = '';
+            if (currentPath) {
+                const prefix = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+                remotePath = prefix;
+            }
+            const timestamp = Date.now();
+            const safeName = file.name.replace(/[^\w.\-]/g, '_');
+            remotePath += `${timestamp}_${safeName}`;
+            addUpload(file, remotePath);
+        }
+        uploadInput.value = '';
+    }
+
+    // 递归获取文件夹下所有文件路径
+    async function getAllFilesInFolder(folderPath) {
         const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        const files = [];
         try {
-            // 列出文件夹下所有对象
             const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
             if (error) throw error;
+            for (const item of data) {
+                const fullPath = path + item.name;
+                if (item.name.endsWith('/')) {
+                    const subFiles = await getAllFilesInFolder(fullPath);
+                    files.push(...subFiles);
+                } else {
+                    files.push(fullPath);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        return files;
+    }
 
-            // 递归删除子文件夹和文件
+    // 打包下载文件夹（递归）
+    async function downloadFolderAsZip(folderPath) {
+        const files = await getAllFilesInFolder(folderPath);
+        if (files.length === 0) {
+            showToast('文件夹为空，无法打包', true);
+            return;
+        }
+        const zip = new JSZip();
+        const folderName = folderPath.replace(/\/$/, '').split('/').pop();
+        for (const filePath of files) {
+            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(filePath).data.publicUrl;
+            const response = await fetch(publicUrl);
+            const blob = await response.blob();
+            // 保留相对路径
+            const relativePath = filePath.replace(folderPath, '');
+            zip.file(relativePath, blob);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${folderName}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`✅ 文件夹 ${folderName} 已打包下载`);
+    }
+
+    // 批量下载选中文件为 ZIP
+    async function batchDownloadSelected() {
+        const paths = Array.from(selectedFilePaths);
+        if (paths.length === 0) {
+            showToast('请先选中文件', true);
+            return;
+        }
+        const zip = new JSZip();
+        for (const filePath of paths) {
+            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(filePath).data.publicUrl;
+            const response = await fetch(publicUrl);
+            const blob = await response.blob();
+            const fileName = filePath.split('/').pop();
+            zip.file(fileName, blob);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `selected_files.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`✅ 已打包 ${paths.length} 个文件`);
+    }
+
+    // ==================== 文件/文件夹管理 ====================
+    // 递归删除文件夹
+    async function deleteFolderRecursive(folderPath) {
+        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        try {
+            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
+            if (error) throw error;
             for (const item of data) {
                 const fullPath = path + item.name;
                 if (item.name.endsWith('/')) {
                     await deleteFolderRecursive(fullPath);
                 } else {
-                    const { error: delError } = await supabaseClient.storage.from(BUCKET_NAME).remove([fullPath]);
-                    if (delError) throw delError;
+                    await supabaseClient.storage.from(BUCKET_NAME).remove([fullPath]);
                 }
             }
-            // 删除文件夹占位符
-            const { error: delFolderError } = await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
-            if (delFolderError && !delFolderError.message.includes('not found')) throw delFolderError;
+            await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
         } catch (err) {
-            console.error(`删除文件夹 ${folderPath} 失败:`, err);
+            console.error(err);
             throw err;
+        }
+    }
+
+    async function deleteFile(filename) {
+        try {
+            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
+            if (error) throw error;
+            showToast(`✅ 已删除 ${filename}`);
+            if (selectedFilePaths.has(filename)) selectedFilePaths.delete(filename);
+            loadCurrentDirectory();
+        } catch (err) {
+            showToast(`删除失败: ${err.message}`, true);
+        }
+    }
+
+    async function deleteSelectedFiles() {
+        const paths = Array.from(selectedFilePaths);
+        if (paths.length === 0) return;
+        if (confirm(`确定要删除选中的 ${paths.length} 个文件吗？`)) {
+            let success = 0, fail = 0;
+            for (const path of paths) {
+                try {
+                    await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
+                    success++;
+                } catch (err) {
+                    fail++;
+                }
+            }
+            showToast(`删除完成: 成功 ${success} 个，失败 ${fail} 个`);
+            selectedFilePaths.clear();
+            loadCurrentDirectory();
         }
     }
 
@@ -425,16 +728,24 @@
                 .list(currentPath, { limit: 1000 });
             if (error) throw error;
 
-            const validItems = (data || []).filter(item => {
+            const validItems = (data || []).filter(item => item.name && item.name !== '.emptyFolderPlaceholder');
+
+            // 提取文件夹（直接子文件夹）
+            const folders = new Set();
+            validItems.forEach(item => {
                 const name = item.name;
-                if (!name || name === '.emptyFolderPlaceholder') return false;
-                return true;
+                if (name.endsWith('/')) {
+                    let folderName = name;
+                    if (currentPath && folderName.startsWith(currentPath)) folderName = folderName.substring(currentPath.length);
+                    folderName = folderName.replace(/\/+$/, '');
+                    if (folderName && !folderName.includes('/')) folders.add(folderName);
+                } else if (!item.metadata || item.metadata.size === 0) {
+                    if (!name.includes('/')) folders.add(name);
+                }
             });
+            renderFolderList(Array.from(folders).sort());
 
-            const folders = extractFoldersFromItems(validItems);
-            renderFolderList(folders);
-
-            // 文件列表：只包含有 metadata 且 size > 0 的非文件夹对象
+            // 文件列表
             const files = validItems.filter(item => {
                 if (item.name.endsWith('/')) return false;
                 if (!item.metadata || item.metadata.size === 0) return false;
@@ -473,7 +784,7 @@
             };
             div.querySelector('.folder-delete').onclick = async (e) => {
                 e.stopPropagation();
-                if (confirm(`确定要删除文件夹 "${folder}" 及其所有内容吗？此操作不可恢复。`)) {
+                if (confirm(`确定要删除文件夹 "${folder}" 及其所有内容吗？`)) {
                     const folderFullPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
                     try {
                         await deleteFolderRecursive(folderFullPath);
@@ -484,16 +795,18 @@
                     }
                 }
             };
+            // 右键菜单绑定
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                currentContextTarget = { type: 'folder', name: folder, path: currentPath ? `${currentPath}${folder}/` : `${folder}/` };
+                showContextMenu(e.clientX, e.clientY);
+            });
             folderListDiv.appendChild(div);
         });
     }
 
     function renderFileGrid(files) {
-        if (files.length === 0 && currentPath !== "") {
-            fileGridDiv.innerHTML = '<div class="empty-state">📂 此文件夹为空，可上传或创建子文件夹</div>';
-            fileToolbar.style.display = 'none';
-            return;
-        } else if (files.length === 0) {
+        if (files.length === 0) {
             fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
             fileToolbar.style.display = 'none';
             return;
@@ -534,84 +847,59 @@
                 document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
             };
-            // 处理复选框变化
             const checkbox = card.querySelector('.file-checkbox');
             checkbox.addEventListener('change', (e) => {
                 e.stopPropagation();
-                if (checkbox.checked) {
-                    selectedFilePaths.add(fullStoragePath);
-                } else {
-                    selectedFilePaths.delete(fullStoragePath);
-                }
+                if (checkbox.checked) selectedFilePaths.add(fullStoragePath);
+                else selectedFilePaths.delete(fullStoragePath);
                 updateSelectAllCheckbox();
                 fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+            });
+            // 右键菜单
+            card.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                currentContextTarget = { type: 'file', name: file.name, path: fullStoragePath };
+                showContextMenu(e.clientX, e.clientY);
             });
             fileGridDiv.appendChild(card);
         });
 
-        // 删除单个文件按钮事件
+        // 删除按钮事件
         fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const filename = btn.getAttribute('data-filename');
-                if (confirm(`确定要删除 "${filename}" 吗？`)) {
-                    await deleteFile(filename);
-                }
+                if (confirm(`确定要删除 "${filename}" 吗？`)) await deleteFile(filename);
             });
         });
 
-        // 更新工具栏显示
         fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
         updateSelectAllCheckbox();
     }
 
     function updateSelectAllCheckbox() {
         if (!selectAllCheckbox) return;
-        const totalCheckboxes = document.querySelectorAll('.file-checkbox').length;
-        const checkedCount = document.querySelectorAll('.file-checkbox:checked').length;
-        selectAllCheckbox.checked = totalCheckboxes > 0 && checkedCount === totalCheckboxes;
-        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCheckboxes;
+        const total = document.querySelectorAll('.file-checkbox').length;
+        const checked = document.querySelectorAll('.file-checkbox:checked').length;
+        selectAllCheckbox.checked = total > 0 && checked === total;
+        selectAllCheckbox.indeterminate = checked > 0 && checked < total;
     }
 
-    // 全选/取消全选
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', () => {
-            const isChecked = selectAllCheckbox.checked;
+            const checked = selectAllCheckbox.checked;
             document.querySelectorAll('.file-checkbox').forEach(cb => {
-                cb.checked = isChecked;
+                cb.checked = checked;
                 const path = cb.getAttribute('data-path');
-                if (isChecked) {
-                    selectedFilePaths.add(path);
-                } else {
-                    selectedFilePaths.delete(path);
-                }
+                if (checked) selectedFilePaths.add(path);
+                else selectedFilePaths.delete(path);
             });
             fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
         });
     }
 
-    // 批量删除选中文件
-    if (deleteSelectedBtn) {
-        deleteSelectedBtn.addEventListener('click', async () => {
-            const paths = Array.from(selectedFilePaths);
-            if (paths.length === 0) return;
-            if (confirm(`确定要删除选中的 ${paths.length} 个文件吗？`)) {
-                let successCount = 0, failCount = 0;
-                for (const path of paths) {
-                    try {
-                        await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
-                        successCount++;
-                    } catch (err) {
-                        failCount++;
-                        console.error(`删除 ${path} 失败:`, err);
-                    }
-                }
-                showToast(`删除完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
-                selectedFilePaths.clear();
-                loadCurrentDirectory();
-            }
-        });
-    }
+    if (deleteSelectedBtn) deleteSelectedBtn.addEventListener('click', deleteSelectedFiles);
+    if (batchDownloadBtn) batchDownloadBtn.addEventListener('click', batchDownloadSelected);
 
     function renderBreadcrumb() {
         breadcrumbDiv.innerHTML = '';
@@ -666,9 +954,7 @@
         }
 
         detailContentDiv.innerHTML = `
-            <div class="detail-preview">
-                ${previewHtml}
-            </div>
+            <div class="detail-preview">${previewHtml}</div>
             <div class="detail-info">
                 <p><strong>文件名：</strong> ${file.name}</p>
                 <p><strong>大小：</strong> ${file.metadata?.size ? formatBytes(file.metadata.size) : '-'}</p>
@@ -677,83 +963,6 @@
                 <p><strong>下载链接：</strong> <a href="${encodedUrl}" target="_blank">点击打开</a></p>
             </div>
         `;
-    }
-
-    async function deleteFile(filename) {
-        try {
-            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
-            if (error) throw error;
-            showToast(`✅ 已删除 ${filename}`);
-            if (selectedFile && selectedFile.name === filename) selectedFile = null;
-            // 如果删除的是选中的文件，从选中集合移除
-            if (selectedFilePaths.has(filename)) selectedFilePaths.delete(filename);
-            loadCurrentDirectory();
-        } catch (err) {
-            showToast(`删除失败: ${err.message}`, true);
-        }
-    }
-
-    // 上传文件（支持批量，带进度）
-    async function uploadFiles(fileList) {
-        const files = Array.from(fileList);
-        if (files.length === 0) return;
-
-        let successCount = 0, failCount = 0;
-        const total = files.length;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            let remotePath = '';
-            if (currentPath) {
-                const prefix = currentPath.endsWith('/') ? currentPath : currentPath + '/';
-                remotePath = prefix;
-            }
-            const timestamp = Date.now();
-            const safeName = file.name.replace(/[^\w.\-]/g, '_');
-            remotePath += `${timestamp}_${safeName}`;
-
-            try {
-                const { error } = await supabaseClient.storage
-                    .from(BUCKET_NAME)
-                    .upload(remotePath, file);
-                if (error) throw error;
-                successCount++;
-                showToast(`✅ ${file.name} 上传成功`);
-            } catch (err) {
-                failCount++;
-                showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
-            }
-            // 可选：显示整体进度
-            // 这里简单提示，不做进度条
-        }
-        showToast(`上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
-        uploadInput.value = '';
-        if (successCount > 0) loadCurrentDirectory();
-    }
-
-    // 拖拽上传
-    function setupDragAndDrop() {
-        let dragCounter = 0;
-        document.body.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-            dragCounter++;
-            dragOverlay.classList.add('active');
-        });
-        document.body.addEventListener('dragleave', (e) => {
-            dragCounter--;
-            if (dragCounter === 0) {
-                dragOverlay.classList.remove('active');
-            }
-        });
-        document.body.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            dragCounter = 0;
-            dragOverlay.classList.remove('active');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                await uploadFiles(files);
-            }
-        });
     }
 
     async function createFolder() {
@@ -775,6 +984,92 @@
         } catch (err) {
             showToast(`创建失败: ${err.message}`, true);
         }
+    }
+
+    // ==================== 右键菜单 ====================
+    function showContextMenu(x, y) {
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        // 根据目标类型显示不同菜单项
+        const downloadFolderItem = contextMenu.querySelector('[data-action="downloadFolder"]');
+        if (currentContextTarget.type === 'folder') {
+            downloadFolderItem.style.display = 'block';
+        } else {
+            downloadFolderItem.style.display = 'none';
+        }
+    }
+
+    function hideContextMenu() {
+        contextMenu.style.display = 'none';
+    }
+
+    // 处理右键菜单点击
+    document.querySelectorAll('.context-menu-item').forEach(item => {
+        item.addEventListener('click', async () => {
+            const action = item.dataset.action;
+            if (!currentContextTarget) return;
+            if (action === 'download') {
+                if (currentContextTarget.type === 'file') {
+                    const url = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(currentContextTarget.path).data.publicUrl;
+                    window.open(url, '_blank');
+                } else if (currentContextTarget.type === 'folder') {
+                    await downloadFolderAsZip(currentContextTarget.path);
+                }
+            } else if (action === 'delete') {
+                if (currentContextTarget.type === 'file') {
+                    if (confirm(`确定要删除 "${currentContextTarget.name}" 吗？`)) {
+                        await deleteFile(currentContextTarget.path);
+                    }
+                } else if (currentContextTarget.type === 'folder') {
+                    if (confirm(`确定要删除文件夹 "${currentContextTarget.name}" 及其所有内容吗？`)) {
+                        try {
+                            await deleteFolderRecursive(currentContextTarget.path);
+                            showToast(`✅ 文件夹 "${currentContextTarget.name}" 已删除`);
+                            loadCurrentDirectory();
+                        } catch (err) {
+                            showToast(`删除失败: ${err.message}`, true);
+                        }
+                    }
+                }
+            } else if (action === 'downloadFolder') {
+                if (currentContextTarget.type === 'folder') {
+                    await downloadFolderAsZip(currentContextTarget.path);
+                }
+            }
+            hideContextMenu();
+        });
+    });
+
+    document.addEventListener('click', () => hideContextMenu());
+
+    // 传输面板折叠/展开
+    const transferHeader = transferPanel.querySelector('.transfer-header');
+    transferHeader.addEventListener('click', () => {
+        transferPanel.classList.toggle('open');
+        transferHeader.querySelector('span:last-child').innerText = transferPanel.classList.contains('open') ? '▲' : '▼';
+    });
+    transferPanel.classList.add('open');
+
+    // 拖拽上传
+    function setupDragAndDrop() {
+        let dragCounter = 0;
+        document.body.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragCounter++;
+            document.body.classList.add('drag-over');
+        });
+        document.body.addEventListener('dragleave', (e) => {
+            dragCounter--;
+            if (dragCounter === 0) document.body.classList.remove('drag-over');
+        });
+        document.body.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dragCounter = 0;
+            document.body.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length) await uploadFiles(files);
+        });
     }
 
     // 事件绑定
