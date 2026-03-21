@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase 云盘</title>
+    <title>AGAIN..</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #0a0c10;
@@ -20,6 +16,7 @@
             flex-direction: column;
             overflow: hidden;
         }
+        /* 顶部栏 */
         .top-bar {
             background: #1e2128;
             border-bottom: 1px solid #2c2f36;
@@ -30,18 +27,8 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-        .title {
-            font-size: 1.4rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .title { font-size: 1.4rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; }
         button, .file-input-label {
             background: #2c7da0;
             border: none;
@@ -56,25 +43,13 @@
             align-items: center;
             gap: 6px;
         }
-        button:hover, .file-input-label:hover {
-            background: #1f5e7e;
-        }
-        .file-input-label {
-            background: #2c2f36;
-        }
-        .file-input-label:hover {
-            background: #3a3e48;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            padding: 16px;
-            gap: 16px;
-        }
+        button:hover, .file-input-label:hover { background: #1f5e7e; }
+        .file-input-label { background: #2c2f36; }
+        .file-input-label:hover { background: #3a3e48; }
+        input[type="file"] { display: none; }
+
+        /* 三栏布局 */
+        .main-layout { display: flex; flex: 1; overflow: hidden; padding: 16px; gap: 16px; }
         .sidebar {
             width: 260px;
             background: #1e2128;
@@ -92,23 +67,28 @@
             justify-content: space-between;
             align-items: center;
         }
-        .folder-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
+        .folder-list { flex: 1; overflow-y: auto; padding: 8px; }
         .folder-item {
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
             transition: background 0.2s;
         }
-        .folder-item:hover {
-            background: #2c2f36;
+        .folder-item:hover { background: #2c2f36; }
+        .folder-name { display: flex; align-items: center; gap: 8px; flex: 1; }
+        .folder-delete {
+            background: none;
+            color: #dc3545;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 12px;
+            display: none;
         }
+        .folder-item:hover .folder-delete { display: inline-block; }
+
         .content-area {
             flex: 1;
             background: #1e2128;
@@ -127,16 +107,25 @@
             gap: 6px;
             background: #1e2128;
         }
-        .breadcrumb-item {
-            cursor: pointer;
-            color: #9aa2b5;
-            transition: color 0.2s;
+        .breadcrumb-item { cursor: pointer; color: #9aa2b5; transition: color 0.2s; }
+        .breadcrumb-item:hover { color: #2c7da0; }
+        .breadcrumb-sep { color: #5a5f6e; }
+
+        /* 文件网格工具栏 */
+        .file-toolbar {
+            padding: 8px 16px;
+            border-bottom: 1px solid #2c2f36;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .breadcrumb-item:hover {
-            color: #2c7da0;
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .breadcrumb-sep {
-            color: #5a5f6e;
+        .delete-selected {
+            background: #5a2a2a;
         }
         .file-grid {
             flex: 1;
@@ -154,13 +143,18 @@
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.1s, border-color 0.2s;
+            position: relative;
         }
-        .file-card:hover {
-            border-color: #2c7da0;
-        }
-        .file-card.selected {
-            border-color: #2c7da0;
-            box-shadow: 0 0 0 2px rgba(44,125,160,0.3);
+        .file-card:hover { border-color: #2c7da0; }
+        .file-card.selected { border-color: #2c7da0; box-shadow: 0 0 0 2px rgba(44,125,160,0.3); }
+        .file-checkbox {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 2;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
         .file-preview {
             height: 120px;
@@ -169,34 +163,12 @@
             justify-content: center;
             background: #0f1117;
         }
-        .file-preview img, .file-preview video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .file-preview audio {
-            width: 90%;
-        }
-        .file-info {
-            padding: 10px;
-        }
-        .file-name {
-            font-size: 0.85rem;
-            font-weight: 500;
-            word-break: break-all;
-            margin-bottom: 6px;
-        }
-        .file-meta {
-            font-size: 0.7rem;
-            color: #9aa2b5;
-            display: flex;
-            justify-content: space-between;
-        }
-        .file-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
+        .file-preview img, .file-preview video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .file-preview audio { width: 90%; }
+        .file-info { padding: 10px; }
+        .file-name { font-size: 0.85rem; font-weight: 500; word-break: break-all; margin-bottom: 6px; }
+        .file-meta { font-size: 0.7rem; color: #9aa2b5; display: flex; justify-content: space-between; }
+        .file-actions { display: flex; gap: 8px; margin-top: 8px; }
         .btn-small {
             background: #2c2f36;
             padding: 4px 10px;
@@ -207,15 +179,10 @@
             cursor: pointer;
             border: none;
         }
-        .btn-small:hover {
-            background: #3a3e48;
-        }
-        .delete-btn {
-            background: #5a2a2a;
-        }
-        .delete-btn:hover {
-            background: #7a3a3a;
-        }
+        .btn-small:hover { background: #3a3e48; }
+        .delete-btn { background: #5a2a2a; }
+        .delete-btn:hover { background: #7a3a3a; }
+
         .detail-panel {
             width: 320px;
             background: #1e2128;
@@ -225,16 +192,8 @@
             flex-direction: column;
             overflow: hidden;
         }
-        .detail-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            font-weight: 500;
-        }
-        .detail-content {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-        }
+        .detail-header { padding: 12px 16px; border-bottom: 1px solid #2c2f36; font-weight: 500; }
+        .detail-content { flex: 1; padding: 16px; overflow-y: auto; }
         .detail-preview {
             background: #13161c;
             border-radius: 12px;
@@ -242,15 +201,8 @@
             text-align: center;
             margin-bottom: 16px;
         }
-        .detail-info p {
-            margin: 8px 0;
-            word-break: break-all;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-        }
+        .detail-info p { margin: 8px 0; word-break: break-all; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; }
         .toast {
             position: fixed;
             bottom: 20px;
@@ -263,21 +215,33 @@
             z-index: 1000;
             animation: fadeIn 0.2s;
         }
-        .toast.error {
-            border-left-color: #dc3545;
+        .toast.error { border-left-color: #dc3545; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 拖拽上传高亮区域 */
+        .drag-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(44,125,160,0.3);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            opacity: 0;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 900px) {
-            .detail-panel { width: 260px; }
-            .sidebar { width: 220px; }
-        }
-        @media (max-width: 700px) {
-            .main-layout { flex-direction: column; }
-            .sidebar, .detail-panel { width: 100%; height: 200px; }
-        }
+        .drag-overlay.active { opacity: 1; }
+
+        @media (max-width: 900px) { .detail-panel { width: 260px; } .sidebar { width: 220px; } }
+        @media (max-width: 700px) { .main-layout { flex-direction: column; } .sidebar, .detail-panel { width: 100%; height: 200px; } }
     </style>
 </head>
 <body>
@@ -304,6 +268,12 @@
 
     <div class="content-area">
         <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="file-toolbar" id="fileToolbar" style="display: none;">
+            <div class="select-all">
+                <input type="checkbox" id="selectAllCheckbox"> <label for="selectAllCheckbox">全选</label>
+            </div>
+            <button id="deleteSelectedBtn" class="delete-selected">🗑️ 删除选中</button>
+        </div>
         <div class="file-grid" id="fileGrid"><div class="empty-state">加载中...</div></div>
     </div>
 
@@ -312,6 +282,8 @@
         <div class="detail-content" id="detailContent"><div class="empty-state">点击文件查看详情</div></div>
     </div>
 </div>
+
+<div id="dragOverlay" class="drag-overlay">📂 拖放文件到此处上传</div>
 
 <script>
     // ==================== Supabase 配置 ====================
@@ -323,7 +295,9 @@
 
     let currentPath = "";
     let selectedFile = null;
+    let selectedFilePaths = new Set(); // 存储选中的文件完整路径
 
+    // DOM 元素
     const uploadInput = document.getElementById('uploadInput');
     const createFolderBtn = document.getElementById('createFolderBtn');
     const createFolderBtnSidebar = document.getElementById('createFolderBtnSidebar');
@@ -332,7 +306,12 @@
     const fileGridDiv = document.getElementById('fileGrid');
     const breadcrumbDiv = document.getElementById('breadcrumb');
     const detailContentDiv = document.getElementById('detailContent');
+    const fileToolbar = document.getElementById('fileToolbar');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const dragOverlay = document.getElementById('dragOverlay');
 
+    // ==================== 辅助函数 ====================
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.className = `toast ${isError ? 'error' : ''}`;
@@ -360,15 +339,9 @@
         if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
             return `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
         } else if (['mp4','webm','mov'].includes(ext)) {
-            return `<video controls style="max-width:100%; max-height:100%;" onerror="this.onerror=null;console.error('视频加载失败')">
-                        <source src="${encodedUrl}" type="video/${ext}">
-                        您的浏览器不支持视频播放。
-                    </video>`;
+            return `<video controls style="max-width:100%; max-height:100%;"><source src="${encodedUrl}" type="video/${ext}">无法播放</video>`;
         } else if (['mp3','wav','ogg','flac'].includes(ext)) {
-            return `<audio controls style="width:90%;" onerror="this.onerror=null;console.error('音频加载失败')">
-                        <source src="${encodedUrl}" type="audio/${ext}">
-                        您的浏览器不支持音频播放。
-                    </audio>`;
+            return `<audio controls style="width:90%;"><source src="${encodedUrl}" type="audio/${ext}">无法播放</audio>`;
         } else {
             return `<div style="font-size: 3rem;">📄</div>`;
         }
@@ -382,6 +355,7 @@
         return false;
     }
 
+    // 提取当前路径下的直接子文件夹
     function extractFoldersFromItems(items) {
         const folders = new Set();
         items.forEach(item => {
@@ -410,9 +384,41 @@
         return Array.from(folders).sort();
     }
 
+    // 递归删除文件夹及其所有内容
+    async function deleteFolderRecursive(folderPath) {
+        // 确保 folderPath 以 / 结尾
+        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        try {
+            // 列出文件夹下所有对象
+            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
+            if (error) throw error;
+
+            // 递归删除子文件夹和文件
+            for (const item of data) {
+                const fullPath = path + item.name;
+                if (item.name.endsWith('/')) {
+                    await deleteFolderRecursive(fullPath);
+                } else {
+                    const { error: delError } = await supabaseClient.storage.from(BUCKET_NAME).remove([fullPath]);
+                    if (delError) throw delError;
+                }
+            }
+            // 删除文件夹占位符
+            const { error: delFolderError } = await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
+            if (delFolderError && !delFolderError.message.includes('not found')) throw delFolderError;
+        } catch (err) {
+            console.error(`删除文件夹 ${folderPath} 失败:`, err);
+            throw err;
+        }
+    }
+
+    // ==================== 加载目录 ====================
     async function loadCurrentDirectory() {
         fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
         folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+        selectedFilePaths.clear();
+        updateSelectAllCheckbox();
+        fileToolbar.style.display = 'none';
         try {
             const { data, error } = await supabaseClient.storage
                 .from(BUCKET_NAME)
@@ -422,8 +428,6 @@
             const validItems = (data || []).filter(item => {
                 const name = item.name;
                 if (!name || name === '.emptyFolderPlaceholder') return false;
-                if (name.endsWith('/')) return true;
-                if (!item.metadata || item.metadata.size === 0) return true;
                 return true;
             });
 
@@ -437,7 +441,6 @@
                 return true;
             });
             renderFileGrid(files);
-
             renderBreadcrumb();
         } catch (err) {
             console.error(err);
@@ -456,12 +459,30 @@
         folders.forEach(folder => {
             const div = document.createElement('div');
             div.className = 'folder-item';
-            div.innerHTML = `📁 ${folder}`;
-            div.onclick = () => {
+            div.innerHTML = `
+                <div class="folder-name">
+                    <span>📁 ${folder}</span>
+                </div>
+                <button class="folder-delete" data-folder="${folder}">🗑️</button>
+            `;
+            div.querySelector('.folder-name').onclick = () => {
                 currentPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
                 loadCurrentDirectory();
                 selectedFile = null;
                 updateDetailPanel(null);
+            };
+            div.querySelector('.folder-delete').onclick = async (e) => {
+                e.stopPropagation();
+                if (confirm(`确定要删除文件夹 "${folder}" 及其所有内容吗？此操作不可恢复。`)) {
+                    const folderFullPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
+                    try {
+                        await deleteFolderRecursive(folderFullPath);
+                        showToast(`✅ 文件夹 "${folder}" 已删除`);
+                        loadCurrentDirectory();
+                    } catch (err) {
+                        showToast(`删除失败: ${err.message}`, true);
+                    }
+                }
             };
             folderListDiv.appendChild(div);
         });
@@ -470,30 +491,27 @@
     function renderFileGrid(files) {
         if (files.length === 0 && currentPath !== "") {
             fileGridDiv.innerHTML = '<div class="empty-state">📂 此文件夹为空，可上传或创建子文件夹</div>';
+            fileToolbar.style.display = 'none';
             return;
         } else if (files.length === 0) {
             fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
+            fileToolbar.style.display = 'none';
             return;
         }
 
         fileGridDiv.innerHTML = '';
         files.forEach(file => {
-            // 构建完整存储路径（当前目录 + 文件名）
             const fullStoragePath = currentPath ? currentPath + file.name : file.name;
             const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullStoragePath).data.publicUrl;
             const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
             const fileDate = file.created_at ? formatDate(file.created_at) : '-';
+            const isSelected = selectedFilePaths.has(fullStoragePath);
+
             const card = document.createElement('div');
             card.className = 'file-card';
             if (selectedFile && selectedFile.name === file.name) card.classList.add('selected');
-            card.onclick = (e) => {
-                if (e.target.closest('.file-actions')) return;
-                selectedFile = file;
-                updateDetailPanel(file, fullStoragePath);
-                document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-            };
             card.innerHTML = `
+                <input type="checkbox" class="file-checkbox" data-path="${fullStoragePath}" ${isSelected ? 'checked' : ''}>
                 <div class="file-preview">
                     ${getPreviewHtml(file.name, publicUrl)}
                 </div>
@@ -509,9 +527,29 @@
                     </div>
                 </div>
             `;
+            card.onclick = (e) => {
+                if (e.target.type === 'checkbox' || e.target.closest('.file-actions')) return;
+                selectedFile = file;
+                updateDetailPanel(file, fullStoragePath);
+                document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            };
+            // 处理复选框变化
+            const checkbox = card.querySelector('.file-checkbox');
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                if (checkbox.checked) {
+                    selectedFilePaths.add(fullStoragePath);
+                } else {
+                    selectedFilePaths.delete(fullStoragePath);
+                }
+                updateSelectAllCheckbox();
+                fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+            });
             fileGridDiv.appendChild(card);
         });
 
+        // 删除单个文件按钮事件
         fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -520,6 +558,58 @@
                     await deleteFile(filename);
                 }
             });
+        });
+
+        // 更新工具栏显示
+        fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+        updateSelectAllCheckbox();
+    }
+
+    function updateSelectAllCheckbox() {
+        if (!selectAllCheckbox) return;
+        const totalCheckboxes = document.querySelectorAll('.file-checkbox').length;
+        const checkedCount = document.querySelectorAll('.file-checkbox:checked').length;
+        selectAllCheckbox.checked = totalCheckboxes > 0 && checkedCount === totalCheckboxes;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCheckboxes;
+    }
+
+    // 全选/取消全选
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            const isChecked = selectAllCheckbox.checked;
+            document.querySelectorAll('.file-checkbox').forEach(cb => {
+                cb.checked = isChecked;
+                const path = cb.getAttribute('data-path');
+                if (isChecked) {
+                    selectedFilePaths.add(path);
+                } else {
+                    selectedFilePaths.delete(path);
+                }
+            });
+            fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+        });
+    }
+
+    // 批量删除选中文件
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', async () => {
+            const paths = Array.from(selectedFilePaths);
+            if (paths.length === 0) return;
+            if (confirm(`确定要删除选中的 ${paths.length} 个文件吗？`)) {
+                let successCount = 0, failCount = 0;
+                for (const path of paths) {
+                    try {
+                        await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
+                        successCount++;
+                    } catch (err) {
+                        failCount++;
+                        console.error(`删除 ${path} 失败:`, err);
+                    }
+                }
+                showToast(`删除完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
+                selectedFilePaths.clear();
+                loadCurrentDirectory();
+            }
         });
     }
 
@@ -595,20 +685,23 @@
             if (error) throw error;
             showToast(`✅ 已删除 ${filename}`);
             if (selectedFile && selectedFile.name === filename) selectedFile = null;
+            // 如果删除的是选中的文件，从选中集合移除
+            if (selectedFilePaths.has(filename)) selectedFilePaths.delete(filename);
             loadCurrentDirectory();
         } catch (err) {
             showToast(`删除失败: ${err.message}`, true);
         }
     }
 
-    async function uploadFiles() {
-        const files = Array.from(uploadInput.files);
-        if (files.length === 0) {
-            showToast('请先选择文件', true);
-            return;
-        }
+    // 上传文件（支持批量，带进度）
+    async function uploadFiles(fileList) {
+        const files = Array.from(fileList);
+        if (files.length === 0) return;
+
         let successCount = 0, failCount = 0;
-        for (const file of files) {
+        const total = files.length;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             let remotePath = '';
             if (currentPath) {
                 const prefix = currentPath.endsWith('/') ? currentPath : currentPath + '/';
@@ -629,10 +722,38 @@
                 failCount++;
                 showToast(`❌ ${file.name} 上传失败: ${err.message}`, true);
             }
+            // 可选：显示整体进度
+            // 这里简单提示，不做进度条
         }
         showToast(`上传完成: 成功 ${successCount} 个，失败 ${failCount} 个`);
         uploadInput.value = '';
         if (successCount > 0) loadCurrentDirectory();
+    }
+
+    // 拖拽上传
+    function setupDragAndDrop() {
+        let dragCounter = 0;
+        document.body.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            dragCounter++;
+            dragOverlay.classList.add('active');
+        });
+        document.body.addEventListener('dragleave', (e) => {
+            dragCounter--;
+            if (dragCounter === 0) {
+                dragOverlay.classList.remove('active');
+            }
+        });
+        document.body.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dragCounter = 0;
+            dragOverlay.classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                await uploadFiles(files);
+            }
+        });
     }
 
     async function createFolder() {
@@ -656,10 +777,12 @@
         }
     }
 
-    uploadInput.addEventListener('change', uploadFiles);
+    // 事件绑定
+    uploadInput.addEventListener('change', (e) => uploadFiles(e.target.files));
     createFolderBtn.addEventListener('click', createFolder);
     createFolderBtnSidebar.addEventListener('click', createFolder);
     refreshBtn.addEventListener('click', () => loadCurrentDirectory());
+    setupDragAndDrop();
 
     loadCurrentDirectory();
 </script>
