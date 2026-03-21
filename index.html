@@ -581,22 +581,54 @@
 }
 
     // 上传入口（多文件）
-    async function uploadFiles(fileList) {
-        const files = Array.from(fileList);
-        if (files.length === 0) return;
-        for (const file of files) {
-            let remotePath = '';
-            if (currentPath) {
-                const prefix = currentPath.endsWith('/') ? currentPath : currentPath + '/';
-                remotePath = prefix;
-            }
-            const timestamp = Date.now();
-            const safeName = file.name.replace(/[^\w.\-]/g, '_');
-            remotePath += `${timestamp}_${safeName}`;
-            addUpload(file, remotePath);
-        }
-        uploadInput.value = '';
+    // 辅助函数：获取唯一的文件名（避免覆盖）
+async function getUniqueFileName(targetPath, fileName) {
+    // 构建完整路径（当前目录 + 文件名）
+    let fullPath = targetPath ? `${targetPath}${fileName}` : fileName;
+    // 检查文件是否存在
+    const { data, error } = await supabaseClient.storage
+        .from(BUCKET_NAME)
+        .list(targetPath, { limit: 1000 });
+    if (error) {
+        console.error('检查文件是否存在失败:', error);
+        return fileName; // 出错时返回原文件名
     }
+    const existingNames = (data || []).map(item => item.name);
+    if (!existingNames.includes(fileName)) {
+        return fileName; // 无冲突，直接返回
+    }
+    // 有冲突，生成新名称
+    let newName = fileName;
+    let counter = 1;
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+    const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+    while (existingNames.includes(newName)) {
+        newName = `${nameWithoutExt} (${counter})${ext}`;
+        counter++;
+    }
+    return newName;
+}
+
+// 修改后的上传函数
+async function uploadFiles(fileList) {
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+    for (const file of files) {
+        // 获取当前目录前缀
+        const prefix = currentPath ? (currentPath.endsWith('/') ? currentPath : currentPath + '/') : '';
+        // 获取唯一文件名（避免重名）
+        const uniqueName = await getUniqueFileName(prefix, file.name);
+        const remotePath = prefix + uniqueName;
+
+        // 添加到传输队列
+        const taskId = nextTaskId++;
+        uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
+        updateTransferUI();
+        pendingUploadQueue.push({ file, remotePath, taskId });
+        processQueue();
+    }
+    uploadInput.value = '';
+}
 
     // 递归获取文件夹下所有文件路径
     async function getAllFilesInFolder(folderPath) {
