@@ -280,6 +280,77 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1001;
             animation: fadeIn 0.2s;
+        /* 音乐列表UI */
+.music-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #13161c;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: 0.2s;
+}
+
+.music-row:hover {
+    background: #1a1f28;
+}
+
+.music-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.music-cover {
+    width: 42px;
+    height: 42px;
+    background: #2c7da0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.music-title {
+    font-size: 0.9rem;
+}
+
+.music-meta {
+    font-size: 0.75rem;
+    color: #9aa2b5;
+}
+
+.music-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: 0.2s;
+}
+
+.music-row:hover .music-actions {
+    opacity: 1;
+}
+
+.play-btn {
+    background: #2c7da0;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background: #5a2a2a;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+        
         }
         .toast.error { border-left-color: #dc3545; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -432,11 +503,21 @@
             return `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
         } else if (['mp4','webm','mov'].includes(ext)) {
             return `<video controls style="max-width:100%; max-height:100%;"><source src="${encodedUrl}" type="video/${ext}">无法播放</video>`;
-        } else if (['mp3','wav','ogg','flac'].includes(ext)) {
-            return `<audio controls style="width:90%;"><source src="${encodedUrl}" type="audio/${ext}">无法播放</audio>`;
-        } else {
-            return `<div style="font-size: 3rem;">📄</div>`;
-        }
+        else if (['mp3','wav','ogg','flac','m4a'].includes(ext)) {
+
+    let mime = 'audio/mpeg';
+
+    if (ext === 'wav') mime = 'audio/wav';
+    else if (ext === 'ogg') mime = 'audio/ogg';
+    else if (ext === 'flac') mime = 'audio/flac';
+    else if (ext === 'm4a') mime = 'audio/mp4';
+
+    return `
+        <audio controls preload="metadata" style="width:100%;">
+            <source src="${encodedUrl}" type="${mime}">
+        </audio>
+    `;
+}
     }
 
     // 更新传输中心显示
@@ -849,88 +930,79 @@ async function uploadFiles(fileList) {
 
 function renderFileGrid(files) {
     if (files.length === 0) {
-        fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
-        fileToolbar.style.display = 'none';
+        fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无音乐，拖进来或者上传</div>';
         return;
     }
 
     fileGridDiv.innerHTML = '';
+
     files.forEach(file => {
-        const fullStoragePath = currentPath ? currentPath + file.name : file.name;
-        const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullStoragePath).data.publicUrl;
-        const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
-        const fileDate = file.created_at ? formatDate(file.created_at) : '-';
-        const isSelected = selectedFilePaths.has(fullStoragePath);
+        const fullPath = currentPath ? currentPath + file.name : file.name;
+        const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullPath).data.publicUrl;
 
-        const card = document.createElement('div');
-        card.className = 'file-card';
-        if (selectedFile && selectedFile.name === file.name) card.classList.add('selected');
-        card.innerHTML = `
-            <input type="checkbox" class="file-checkbox" data-path="${fullStoragePath}" ${isSelected ? 'checked' : ''}>
-            <div class="file-preview">
-                ${getPreviewHtml(file.name, publicUrl)}
-            </div>
-            <div class="file-info">
-                <div class="file-name" title="${file.name}">${file.name}</div>
-                <div class="file-meta">
-                    <span>${fileSize}</span>
-                    <span>${fileDate}</span>
-                </div>
-                <div class="file-actions">
-                    <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载（Powerd by Xlead&李明杰）</a>
-                    <button class="btn-small delete-btn" data-filename="${fullStoragePath}">🗑️ 删除</button>
+        const div = document.createElement('div');
+        div.className = 'music-row';
+
+        div.innerHTML = `
+            <div class="music-left">
+                <div class="music-cover">🎵</div>
+                <div class="music-text">
+                    <div class="music-title">${file.name}</div>
+                    <div class="music-meta">加载中...</div>
                 </div>
             </div>
+
+            <div class="music-actions">
+                <button class="play-btn">▶</button>
+                <button class="delete-btn">🗑</button>
+            </div>
+
+            <audio preload="metadata" src="${publicUrl}"></audio>
         `;
-        card.onclick = (e) => {
-            if (e.target.type === 'checkbox' || e.target.closest('.file-actions')) return;
-            selectedFile = file;
-            updateDetailPanel(file, fullStoragePath);
-            document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-        };
-        const checkbox = card.querySelector('.file-checkbox');
-        checkbox.addEventListener('change', (e) => {
-            e.stopPropagation();
-            if (checkbox.checked) selectedFilePaths.add(fullStoragePath);
-            else selectedFilePaths.delete(fullStoragePath);
-            updateSelectAllCheckbox();
-            fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
-        });
-        card.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            currentContextTarget = { type: 'file', name: file.name, path: fullStoragePath };
-            showContextMenu(e.clientX, e.clientY);
-        });
-        fileGridDiv.appendChild(card);
-    });
 
-    // 删除按钮事件
-    fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const filename = btn.getAttribute('data-filename');
-            if (confirm(`确定要删除 "${filename}" 吗？`)) await deleteFile(filename);
-        });
-    });
+        const audio = div.querySelector('audio');
+        const playBtn = div.querySelector('.play-btn');
 
-    // 音频全局管理：一次只能播放一个
-    const audioElements = fileGridDiv.querySelectorAll('audio');
-    function pauseAllOtherAudios(currentAudio) {
-        audioElements.forEach(audio => {
-            if (audio !== currentAudio && !audio.paused) {
+        // ✅ 加载时长
+        audio.addEventListener('loadedmetadata', () => {
+            const duration = Math.floor(audio.duration);
+            const min = Math.floor(duration / 60);
+            const sec = String(duration % 60).padStart(2, '0');
+            div.querySelector('.music-meta').innerText = `${min}:${sec}`;
+        });
+
+        // ✅ 播放控制
+        playBtn.onclick = (e) => {
+            e.stopPropagation();
+
+            document.querySelectorAll('audio').forEach(a => {
+                if (a !== audio) a.pause();
+            });
+
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = '⏸';
+            } else {
                 audio.pause();
+                playBtn.innerText = '▶';
             }
-        });
-    }
-    audioElements.forEach(audio => {
-        audio.removeEventListener('play', audio._playHandler); // 防止重复绑定
-        audio._playHandler = () => pauseAllOtherAudios(audio);
-        audio.addEventListener('play', audio._playHandler);
-    });
+        };
 
-    fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
-    updateSelectAllCheckbox();
+        // 播放结束恢复按钮
+        audio.onended = () => {
+            playBtn.innerText = '▶';
+        };
+
+        // 删除
+        div.querySelector('.delete-btn').onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm(`删除 ${file.name}?`)) {
+                await deleteFile(fullPath);
+            }
+        };
+
+        fileGridDiv.appendChild(div);
+    });
 }
     function updateSelectAllCheckbox() {
         if (!selectAllCheckbox) return;
