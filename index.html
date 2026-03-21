@@ -340,12 +340,22 @@
         return newName;
     }
 
+    // 添加清理函数
+    function sanitizeFileName(name) {
+        let cleaned = name.replace(/\s+/g, '_'); // 空格转下划线
+        cleaned = cleaned.replace(/[^a-zA-Z0-9_\-.]/g, ''); // 移除其他非法字符
+        if (!cleaned) cleaned = 'file';
+        return cleaned;
+    }
+
     async function uploadFiles(fileList) {
         const files = Array.from(fileList);
         if (!files.length) return;
         for (const file of files) {
             const prefix = currentPath ? (currentPath.endsWith('/') ? currentPath : currentPath + '/') : '';
-            const uniqueName = await getUniqueFileName(prefix, file.name);
+            // 清理文件名
+            const safeName = sanitizeFileName(file.name);
+            const uniqueName = await getUniqueFileName(prefix, safeName);
             const remotePath = prefix + uniqueName;
             const taskId = nextTaskId++;
             uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
