@@ -3,327 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> AGAIN..</title>
+    <title>🎵 音乐云盘 · 频谱音轨</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
+        /* 包含上面所有样式 */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0c10;
-            color: #e6e9f0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        /* 顶部栏 */
-        .top-bar {
-            background: #1e2128;
-            border-bottom: 1px solid #2c2f36;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0a0c10; color: #e6e9f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { background: #1e2128; border-bottom: 1px solid #2c2f36; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
         .title { font-size: 1.4rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .actions { display: flex; gap: 12px; flex-wrap: wrap; }
-        button, .file-input-label {
-            background: #2c7da0;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+        button, .file-input-label { background: #2c7da0; border: none; color: white; padding: 6px 14px; border-radius: 20px; font-weight: 500; cursor: pointer; transition: background 0.2s; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
         button:hover, .file-input-label:hover { background: #1f5e7e; }
         .file-input-label { background: #2c2f36; }
         .file-input-label:hover { background: #3a3e48; }
         input[type="file"] { display: none; }
-
-        /* 主布局 */
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            padding: 16px;
-            gap: 16px;
-        }
-        /* 左侧文件夹树 */
-        .sidebar {
-            width: 260px;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .sidebar-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            font-weight: 500;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .main-layout { display: flex; flex: 1; overflow: hidden; padding: 16px; gap: 16px; }
+        .sidebar { width: 260px; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header { padding: 12px 16px; border-bottom: 1px solid #2c2f36; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
         .folder-list { flex: 1; overflow-y: auto; padding: 8px; }
-        .folder-item {
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background 0.2s;
-        }
+        .folder-item { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.2s; }
         .folder-item:hover { background: #2c2f36; }
         .folder-name { display: flex; align-items: center; gap: 8px; flex: 1; }
-        .folder-delete {
-            background: none;
-            color: #dc3545;
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 12px;
-            display: none;
-        }
+        .folder-delete { background: none; color: #dc3545; font-size: 0.75rem; padding: 2px 6px; border-radius: 12px; display: none; }
         .folder-item:hover .folder-delete { display: inline-block; }
-
-        /* 中间内容区 */
-        .content-area {
-            flex: 1;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .breadcrumb {
-            padding: 12px 16px;
-            border-bottom: 1px solid #2c2f36;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-            background: #1e2128;
-        }
+        .content-area { flex: 1; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
+        .breadcrumb { padding: 12px 16px; border-bottom: 1px solid #2c2f36; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #1e2128; }
         .breadcrumb-item { cursor: pointer; color: #9aa2b5; transition: color 0.2s; }
         .breadcrumb-item:hover { color: #2c7da0; }
         .breadcrumb-sep { color: #5a5f6e; }
-
-        .file-toolbar {
-            padding: 8px 16px;
-            border-bottom: 1px solid #2c2f36;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .file-toolbar { padding: 8px 16px; border-bottom: 1px solid #2c2f36; display: flex; justify-content: space-between; align-items: center; }
         .select-all { display: flex; align-items: center; gap: 8px; }
         .delete-selected { background: #5a2a2a; }
         .batch-download { background: #2c7da0; }
-
-        .file-grid {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .music-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #13161c;
-            padding: 10px 14px;
-            border-radius: 10px;
-            transition: 0.2s;
-        }
-        .music-row:hover {
-            background: #1a1f28;
-        }
-        .music-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .music-cover {
-            width: 42px;
-            height: 42px;
-            background: #2c7da0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        .music-title {
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-        .music-meta {
-            font-size: 0.75rem;
-            color: #9aa2b5;
-        }
-        .music-actions {
-            display: flex;
-            gap: 6px;
-            opacity: 0;
-            transition: 0.2s;
-        }
-        .music-row:hover .music-actions {
-            opacity: 1;
-        }
-        .play-btn, .delete-btn {
-            background: #2c2f36;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .play-btn:hover, .delete-btn:hover { background: #3a3e48; }
+        .file-grid { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .music-row { display: flex; justify-content: space-between; align-items: center; background: #13161c; padding: 10px 14px; border-radius: 10px; transition: 0.2s; }
+        .music-row:hover { background: #1a1f28; }
+        .music-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .file-checkbox { width: 18px; height: 18px; cursor: pointer; }
+        .music-cover { width: 42px; height: 42px; background: #2c7da0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .music-text { flex: 1; }
+        .music-title { font-size: 0.9rem; word-break: break-all; }
+        .music-meta { font-size: 0.75rem; color: #9aa2b5; }
+        .music-actions { display: flex; gap: 8px; opacity: 0; transition: 0.2s; }
+        .music-row:hover .music-actions { opacity: 1; }
+        .play-btn, .download-btn, .delete-btn { background: #2c2f36; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; }
+        .play-btn:hover, .download-btn:hover, .delete-btn:hover { background: #3a3e48; }
         .delete-btn { background: #5a2a2a; }
         .delete-btn:hover { background: #7a3a3a; }
-
-        /* 右侧详情区 */
-        .detail-panel {
-            width: 320px;
-            background: #1e2128;
-            border-radius: 16px;
-            border: 1px solid #2c2f36;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        .detail-panel { width: 320px; background: #1e2128; border-radius: 16px; border: 1px solid #2c2f36; display: flex; flex-direction: column; overflow: hidden; }
         .detail-header { padding: 12px 16px; border-bottom: 1px solid #2c2f36; font-weight: 500; }
         .detail-content { flex: 1; padding: 16px; overflow-y: auto; }
-        .detail-preview {
-            background: #13161c;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
+        .detail-preview { background: #13161c; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px; }
         .detail-info p { margin: 8px 0; word-break: break-all; }
-
-        /* 传输中心面板 */
-        .transfer-panel {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 360px;
-            background: #1e2128;
-            border: 1px solid #2c2f36;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            z-index: 1000;
-            transition: all 0.2s;
-        }
-        .transfer-header {
-            padding: 12px 16px;
-            background: #2c2f36;
-            border-radius: 16px 16px 0 0;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 500;
-        }
-        .transfer-content {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 8px;
-            display: none;
-        }
+        .spectrum-container { background: #0f1117; border-radius: 8px; padding: 8px; margin: 12px 0; }
+        canvas#spectrum { width: 100%; height: 100px; display: block; border-radius: 4px; }
+        .custom-progress { margin: 12px 0; cursor: pointer; background: #2c2f36; height: 4px; border-radius: 2px; position: relative; }
+        .custom-progress-fill { background: #2c7da0; width: 0%; height: 100%; border-radius: 2px; transition: width 0.1s linear; }
+        .time-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #9aa2b5; margin-top: 4px; }
+        .transfer-panel { position: fixed; bottom: 20px; right: 20px; width: 360px; background: #1e2128; border: 1px solid #2c2f36; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); z-index: 1000; transition: all 0.2s; }
+        .transfer-header { padding: 12px 16px; background: #2c2f36; border-radius: 16px 16px 0 0; cursor: pointer; display: flex; justify-content: space-between; font-weight: 500; }
+        .transfer-content { max-height: 400px; overflow-y: auto; padding: 8px; display: none; }
         .transfer-panel.open .transfer-content { display: block; }
-        .transfer-item {
-            background: #13161c;
-            margin: 6px 0;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-        }
+        .transfer-item { background: #13161c; margin: 6px 0; padding: 8px; border-radius: 8px; font-size: 0.8rem; }
         .transfer-name { font-weight: 500; word-break: break-all; }
-        .transfer-progress {
-            background: #2c2f36;
-            height: 8px;
-            border-radius: 4px;
-            margin: 6px 0;
-            overflow: hidden;
-        }
-        .transfer-progress-bar {
-            background: #2c7da0;
-            width: 0%;
-            height: 100%;
-            transition: width 0.2s;
-        }
+        .transfer-progress { background: #2c2f36; height: 8px; border-radius: 4px; margin: 6px 0; overflow: hidden; }
+        .transfer-progress-bar { background: #2c7da0; width: 0%; height: 100%; transition: width 0.2s; }
         .transfer-status { font-size: 0.7rem; color: #9aa2b5; margin-top: 4px; }
-        .transfer-cancel {
-            background: none;
-            color: #dc3545;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            margin-left: 8px;
-            cursor: pointer;
-        }
-
+        .transfer-cancel { background: none; color: #dc3545; font-size: 0.7rem; padding: 2px 6px; margin-left: 8px; cursor: pointer; }
         .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #1e2128;
-            border-left: 4px solid #2c7da0;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1001;
-            animation: fadeIn 0.2s;
-        }
+        .toast { position: fixed; bottom: 20px; left: 20px; background: #1e2128; border-left: 4px solid #2c7da0; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1001; animation: fadeIn 0.2s; }
         .toast.error { border-left-color: #dc3545; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 右键菜单 */
-        .context-menu {
-            position: fixed;
-            background: #1e2128;
-            border: 1px solid #2c2f36;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1002;
-            display: none;
-        }
-        .context-menu-item {
-            padding: 8px 16px;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
+        .context-menu { position: fixed; background: #1e2128; border: 1px solid #2c2f36; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1002; display: none; }
+        .context-menu-item { padding: 8px 16px; cursor: pointer; transition: background 0.1s; }
         .context-menu-item:hover { background: #2c2f36; }
-
         @media (max-width: 900px) { .detail-panel { width: 260px; } .sidebar { width: 220px; } }
         @media (max-width: 700px) { .main-layout { flex-direction: column; } .sidebar, .detail-panel { width: 100%; height: 200px; } }
     </style>
 </head>
 <body>
 <div class="top-bar">
-    <div class="title">飞大干啥也不是..</div>
+    <div class="title">🎵 音乐云盘 · 频谱音轨</div>
     <div class="actions">
         <label class="file-input-label">
-            📂 上传文件（切忌！上传文件刷新下，不要重复上传）
-            <input type="file" id="uploadInput" multiple>
+            📂 上传音乐
+            <input type="file" id="uploadInput" multiple accept="audio/*">
         </label>
         <button id="createFolderBtn">📁 新建文件夹</button>
         <button id="refreshBtn">🔄 刷新</button>
@@ -354,12 +119,13 @@
     </div>
 
     <div class="detail-panel">
-        <div class="detail-header">📄 详情</div>
-        <div class="detail-content" id="detailContent"><div class="empty-state">点击文件查看详情</div></div>
+        <div class="detail-header">🎧 播放详情 & 频谱</div>
+        <div class="detail-content" id="detailContent">
+            <div class="empty-state">点击歌曲查看详情并播放</div>
+        </div>
     </div>
 </div>
 
-<!-- 传输中心 -->
 <div class="transfer-panel" id="transferPanel">
     <div class="transfer-header">
         <span>📦 传输中心</span>
@@ -370,7 +136,6 @@
     </div>
 </div>
 
-<!-- 右键菜单 -->
 <div class="context-menu" id="contextMenu">
     <div class="context-menu-item" data-action="download">⬇️ 下载</div>
     <div class="context-menu-item" data-action="delete">🗑️ 删除</div>
@@ -378,7 +143,7 @@
 </div>
 
 <script>
-    // ==================== Supabase 配置 ====================
+    // Supabase 配置
     const SUPABASE_URL = "https://tcewihcxuvriiigcorqq.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_sHnD5f9BkyWm5IwIYI1zfg_ukjmh_Y4";
     const BUCKET_NAME = "music";
@@ -387,16 +152,14 @@
 
     let currentPath = "";
     let selectedFile = null;
-    let selectedFilePaths = new Set(); // 存储选中的文件完整路径
+    let selectedFilePaths = new Set();
 
-    // 上传任务管理
-    let uploadTasks = new Map(); // key: 任务id, value: { xhr, fileName, status, progress }
+    let uploadTasks = new Map();
     let nextTaskId = 1;
     const MAX_CONCURRENT = 3;
     let activeUploads = 0;
-    let pendingUploadQueue = []; // 待上传文件列表 { file, remotePath }
+    let pendingUploadQueue = [];
 
-    // DOM 元素
     const uploadInput = document.getElementById('uploadInput');
     const createFolderBtn = document.getElementById('createFolderBtn');
     const createFolderBtnSidebar = document.getElementById('createFolderBtnSidebar');
@@ -413,13 +176,19 @@
     const transferContent = document.getElementById('transferContent');
     const contextMenu = document.getElementById('contextMenu');
 
-    let currentContextTarget = null; // 右键点击的目标 { type: 'file'|'folder', name, path }
+    let currentContextTarget = null;
+    let currentAudio = null;
+    let currentAudioSrc = null;
+    let audioContext = null;
+    let sourceNode = null;
+    let analyserNode = null;
+    let animationId = null;
 
-    // ==================== 辅助函数 ====================
-    function showToast(message, isError = false) {
+    // 辅助函数
+    function showToast(msg, isErr = false) {
         const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerText = message;
+        toast.className = `toast ${isErr ? 'error' : ''}`;
+        toast.innerText = msg;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
@@ -432,608 +201,82 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    function formatDate(isoString) {
-        if (!isoString) return '-';
-        return new Date(isoString).toLocaleString();
-    }
+    function formatDate(iso) { return iso ? new Date(iso).toLocaleString() : '-'; }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-    function getPreviewHtml(fileName, publicUrl) {
-        const encodedUrl = encodeURI(publicUrl);
-        const ext = fileName.split('.').pop().toLowerCase();
-        if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
-            return `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
-        } else if (['mp4','webm','mov'].includes(ext)) {
-            return `<video controls style="max-width:100%; max-height:100%;"><source src="${encodedUrl}" type="video/${ext}">无法播放</video>`;
-        } else if (['mp3','wav','ogg','flac','m4a'].includes(ext)) {
-            let mime = 'audio/mpeg';
-            if (ext === 'wav') mime = 'audio/wav';
-            else if (ext === 'ogg') mime = 'audio/ogg';
-            else if (ext === 'flac') mime = 'audio/flac';
-            else if (ext === 'm4a') mime = 'audio/mp4';
-            return `<audio controls preload="metadata" style="width:100%;"><source src="${encodedUrl}" type="${mime}"></audio>`;
-        } else {
-            return `<div style="font-size: 3rem;">📄</div>`;
+    function formatTime(sec) { if (isNaN(sec)) return '0:00'; const m = Math.floor(sec/60), s = Math.floor(sec%60); return `${m}:${s.toString().padStart(2,'0')}`; }
+
+    // 频谱相关
+    function initAudioContext() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyserNode = audioContext.createAnalyser();
+            analyserNode.fftSize = 256;
+            analyserNode.smoothingTimeConstant = 0.8;
         }
     }
 
-    // 更新传输中心显示
-    function updateTransferUI() {
-        if (uploadTasks.size === 0 && pendingUploadQueue.length === 0) {
-            transferContent.innerHTML = '<div class="empty-state">暂无传输任务</div>';
+    function connectAudioToSpectrum(audioEl) {
+        if (!audioContext) initAudioContext();
+        if (sourceNode) try { sourceNode.disconnect(); } catch(e) {}
+        sourceNode = audioContext.createMediaElementSource(audioEl);
+        sourceNode.connect(analyserNode);
+        analyserNode.connect(audioContext.destination);
+    }
+
+    function drawSpectrum() {
+        if (!analyserNode || !currentAudio || currentAudio.paused || audioContext.state !== 'running') {
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = null;
             return;
         }
-        let html = '';
-        for (const [id, task] of uploadTasks.entries()) {
-            html += `
-                <div class="transfer-item" data-task-id="${id}">
-                    <div class="transfer-name">📤 ${task.fileName}</div>
-                    <div class="transfer-progress"><div class="transfer-progress-bar" style="width: ${task.progress}%"></div></div>
-                    <div class="transfer-status">${task.status} (${task.progress}%) <span class="transfer-cancel" data-task-id="${id}">取消</span></div>
-                </div>
-            `;
+        const canvas = document.getElementById('spectrum');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        canvas.width = width; canvas.height = height;
+        const bufferLength = analyserNode.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserNode.getByteFrequencyData(dataArray);
+        ctx.clearRect(0, 0, width, height);
+        const barWidth = (width / bufferLength) * 2.5;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            const val = dataArray[i] / 255;
+            const barH = val * height;
+            ctx.fillStyle = `hsl(${200 + val * 60}, 100%, 50%)`;
+            ctx.fillRect(x, height - barH, barWidth - 1, barH);
+            x += barWidth;
         }
-        for (let i = 0; i < pendingUploadQueue.length; i++) {
-            const p = pendingUploadQueue[i];
-            html += `
-                <div class="transfer-item">
-                    <div class="transfer-name">⏳ ${p.file.name}</div>
-                    <div class="transfer-status">等待上传</div>
-                </div>
-            `;
-        }
-        transferContent.innerHTML = html;
-        // 绑定取消事件
-        document.querySelectorAll('.transfer-cancel').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const taskId = parseInt(btn.dataset.taskId);
-                cancelUpload(taskId);
-            });
-        });
+        animationId = requestAnimationFrame(drawSpectrum);
     }
 
-    // 取消上传
-    function cancelUpload(taskId) {
-        const task = uploadTasks.get(taskId);
-        if (task && task.xhr) {
-            task.xhr.abort();
-            task.status = '已取消';
-            uploadTasks.delete(taskId);
-            activeUploads--;
-            showToast(`已取消上传: ${task.fileName}`);
-            processQueue();
-            updateTransferUI();
-        }
-    }
+    function stopSpectrum() { if (animationId) cancelAnimationFrame(animationId); animationId = null; }
 
-    // 实际执行上传（使用 XHR 带进度）
-    async function performUpload(file, remotePath, taskId) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${remotePath}`;
-        const xhr = new XMLHttpRequest();
-        const task = uploadTasks.get(taskId);
-        if (task) task.xhr = xhr;
-
-        return new Promise((resolve, reject) => {
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    const taskItem = uploadTasks.get(taskId);
-                    if (taskItem) {
-                        taskItem.progress = percent;
-                        taskItem.status = '上传中';
-                        updateTransferUI();
-                    }
-                }
-            });
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    const taskItem = uploadTasks.get(taskId);
-                    if (taskItem) {
-                        taskItem.status = '完成';
-                        taskItem.progress = 100;
-                        updateTransferUI();
-                        setTimeout(() => {
-                            uploadTasks.delete(taskId);
-                            updateTransferUI();
-                        }, 1000);
-                    }
-                    resolve();
-                } else {
-                    reject(new Error(`上传失败: ${xhr.status}`));
-                }
-                activeUploads--;
-                processQueue();
-            };
-            xhr.onerror = () => {
-                reject(new Error('网络错误'));
-                activeUploads--;
-                processQueue();
-            };
-            xhr.onabort = () => {
-                reject(new Error('已取消'));
-                activeUploads--;
-                processQueue();
-            };
-            xhr.open('POST', url);
-            xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
-            xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-            xhr.send(formData);
-        });
-    }
-
-    // 添加上传任务
-    async function addUpload(file, remotePath) {
-        const taskId = nextTaskId++;
-        uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
-        updateTransferUI();
-        pendingUploadQueue.push({ file, remotePath, taskId });
-        processQueue();
-    }
-
-    // 处理队列
-    function processQueue() {
-        while (activeUploads < MAX_CONCURRENT && pendingUploadQueue.length > 0) {
-            const item = pendingUploadQueue.shift();
-            activeUploads++;
-            const task = uploadTasks.get(item.taskId);
-            if (task) task.status = '上传中';
-            updateTransferUI();
-            performUpload(item.file, item.remotePath, item.taskId)
-                .catch(err => {
-                    showToast(`${item.file.name} 上传失败: ${err.message}`, true);
-                    uploadTasks.delete(item.taskId);
-                    updateTransferUI();
-                })
-                .finally(() => {
-                    activeUploads--;
-                    // 继续处理队列中的其他任务
-                    processQueue();
-                    // 所有任务完成后刷新文件列表
-                    if (activeUploads === 0 && pendingUploadQueue.length === 0) {
-                        loadCurrentDirectory();
-                    }
-                });
-        }
-    }
-
-    // 辅助函数：获取唯一的文件名（避免覆盖）
-    async function getUniqueFileName(targetPath, fileName) {
-        // 构建完整路径（当前目录 + 文件名）
-        let fullPath = targetPath ? `${targetPath}${fileName}` : fileName;
-        // 检查文件是否存在
-        const { data, error } = await supabaseClient.storage
-            .from(BUCKET_NAME)
-            .list(targetPath, { limit: 1000 });
-        if (error) {
-            console.error('检查文件是否存在失败:', error);
-            return fileName; // 出错时返回原文件名
-        }
-        const existingNames = (data || []).map(item => item.name);
-        if (!existingNames.includes(fileName)) {
-            return fileName; // 无冲突，直接返回
-        }
-        // 有冲突，生成新名称
-        let newName = fileName;
-        let counter = 1;
-        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-        const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
-        while (existingNames.includes(newName)) {
-            newName = `${nameWithoutExt} (${counter})${ext}`;
-            counter++;
-        }
-        return newName;
-    }
-
-    // 修改后的上传函数
-    async function uploadFiles(fileList) {
-        const files = Array.from(fileList);
-        if (files.length === 0) return;
-        for (const file of files) {
-            // 获取当前目录前缀
-            const prefix = currentPath ? (currentPath.endsWith('/') ? currentPath : currentPath + '/') : '';
-            // 获取唯一文件名（避免重名）
-            const uniqueName = await getUniqueFileName(prefix, file.name);
-            const remotePath = prefix + uniqueName;
-
-            // 添加到传输队列
-            const taskId = nextTaskId++;
-            uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
-            updateTransferUI();
-            pendingUploadQueue.push({ file, remotePath, taskId });
-            processQueue();
-        }
-        uploadInput.value = '';
-    }
-
-    // 递归获取文件夹下所有文件路径
-    async function getAllFilesInFolder(folderPath) {
-        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
-        const files = [];
-        try {
-            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
-            if (error) throw error;
-            for (const item of data) {
-                const fullPath = path + item.name;
-                if (item.name.endsWith('/')) {
-                    const subFiles = await getAllFilesInFolder(fullPath);
-                    files.push(...subFiles);
-                } else {
-                    files.push(fullPath);
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        }
-        return files;
-    }
-
-    // 打包下载文件夹（递归）
-    async function downloadFolderAsZip(folderPath) {
-        const files = await getAllFilesInFolder(folderPath);
-        if (files.length === 0) {
-            showToast('文件夹为空，无法打包', true);
-            return;
-        }
-        const zip = new JSZip();
-        const folderName = folderPath.replace(/\/$/, '').split('/').pop();
-        for (const filePath of files) {
-            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(filePath).data.publicUrl;
-            const response = await fetch(publicUrl);
-            const blob = await response.blob();
-            // 保留相对路径
-            const relativePath = filePath.replace(folderPath, '');
-            zip.file(relativePath, blob);
-        }
-        const content = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(content);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${folderName}.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast(`✅ 文件夹 ${folderName} 已打包下载`);
-    }
-
-    // 批量下载选中文件为 ZIP
-    async function batchDownloadSelected() {
-        const paths = Array.from(selectedFilePaths);
-        if (paths.length === 0) {
-            showToast('请先选中文件', true);
-            return;
-        }
-        const zip = new JSZip();
-        for (const filePath of paths) {
-            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(filePath).data.publicUrl;
-            const response = await fetch(publicUrl);
-            const blob = await response.blob();
-            const fileName = filePath.split('/').pop();
-            zip.file(fileName, blob);
-        }
-        const content = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(content);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `selected_files.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast(`✅ 已打包 ${paths.length} 个文件`);
-    }
-
-    // ==================== 文件/文件夹管理 ====================
-    // 递归删除文件夹
-    async function deleteFolderRecursive(folderPath) {
-        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
-        try {
-            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
-            if (error) throw error;
-            for (const item of data) {
-                const fullPath = path + item.name;
-                if (item.name.endsWith('/')) {
-                    await deleteFolderRecursive(fullPath);
-                } else {
-                    await supabaseClient.storage.from(BUCKET_NAME).remove([fullPath]);
-                }
-            }
-            await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
-        } catch (err) {
-            console.error(err);
-            throw err;
-        }
-    }
-
-    async function deleteFile(filename) {
-        try {
-            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
-            if (error) throw error;
-            showToast(`✅ 已删除 ${filename}`);
-            if (selectedFilePaths.has(filename)) selectedFilePaths.delete(filename);
-            loadCurrentDirectory();
-        } catch (err) {
-            showToast(`删除失败: ${err.message}`, true);
-        }
-    }
-
-    async function deleteSelectedFiles() {
-        const paths = Array.from(selectedFilePaths);
-        if (paths.length === 0) return;
-        if (confirm(`确定要删除选中的 ${paths.length} 个文件吗？`)) {
-            let success = 0, fail = 0;
-            for (const path of paths) {
-                try {
-                    await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
-                    success++;
-                } catch (err) {
-                    fail++;
-                }
-            }
-            showToast(`删除完成: 成功 ${success} 个，失败 ${fail} 个`);
-            selectedFilePaths.clear();
-            loadCurrentDirectory();
-        }
-    }
-
-    // ==================== 加载目录 ====================
-    async function loadCurrentDirectory() {
-        fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
-        folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
-        selectedFilePaths.clear();
-        updateSelectAllCheckbox();
-        fileToolbar.style.display = 'none';
-        try {
-            const { data, error } = await supabaseClient.storage
-                .from(BUCKET_NAME)
-                .list(currentPath, { limit: 1000 });
-            if (error) throw error;
-
-            const validItems = (data || []).filter(item => item.name && item.name !== '.emptyFolderPlaceholder');
-
-            // 提取文件夹（直接子文件夹）
-            const folders = new Set();
-            validItems.forEach(item => {
-                const name = item.name;
-                if (name.endsWith('/')) {
-                    let folderName = name;
-                    if (currentPath && folderName.startsWith(currentPath)) folderName = folderName.substring(currentPath.length);
-                    folderName = folderName.replace(/\/+$/, '');
-                    if (folderName && !folderName.includes('/')) folders.add(folderName);
-                } else if (!item.metadata || item.metadata.size === 0) {
-                    if (!name.includes('/')) folders.add(name);
-                }
-            });
-            renderFolderList(Array.from(folders).sort());
-
-            // 文件列表
-            const files = validItems.filter(item => {
-                if (item.name.endsWith('/')) return false;
-                if (!item.metadata || item.metadata.size === 0) return false;
-                return true;
-            });
-            renderFileGrid(files);
-            renderBreadcrumb();
-        } catch (err) {
-            console.error(err);
-            fileGridDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${err.message}</div>`;
-            folderListDiv.innerHTML = '<div class="empty-state">加载失败</div>';
-            showToast(`加载失败: ${err.message}`, true);
-        }
-    }
-
-    function renderFolderList(folders) {
-        if (folders.length === 0) {
-            folderListDiv.innerHTML = '<div class="empty-state">📭 无子文件夹</div>';
-            return;
-        }
-        folderListDiv.innerHTML = '';
-        folders.forEach(folder => {
-            const div = document.createElement('div');
-            div.className = 'folder-item';
-            div.innerHTML = `
-                <div class="folder-name">
-                    <span>📁 ${folder}</span>
-                </div>
-                <button class="folder-delete" data-folder="${folder}">🗑️</button>
-            `;
-            div.querySelector('.folder-name').onclick = () => {
-                currentPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
-                loadCurrentDirectory();
-                selectedFile = null;
-                updateDetailPanel(null);
-            };
-            div.querySelector('.folder-delete').onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm(`确定要删除文件夹 "${folder}" 及其所有内容吗？`)) {
-                    const folderFullPath = currentPath ? `${currentPath}${folder}/` : `${folder}/`;
-                    try {
-                        await deleteFolderRecursive(folderFullPath);
-                        showToast(`✅ 文件夹 "${folder}" 已删除`);
-                        loadCurrentDirectory();
-                    } catch (err) {
-                        showToast(`删除失败: ${err.message}`, true);
-                    }
-                }
-            };
-            // 右键菜单绑定
-            div.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                currentContextTarget = { type: 'folder', name: folder, path: currentPath ? `${currentPath}${folder}/` : `${folder}/` };
-                showContextMenu(e.clientX, e.clientY);
-            });
-            folderListDiv.appendChild(div);
-        });
-    }
-
-    function renderFileGrid(files) {
-        if (files.length === 0) {
-            fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无音乐，拖进来或者上传</div>';
-            return;
-        }
-
-        fileGridDiv.innerHTML = '';
-
-        files.forEach(file => {
-            const fullPath = currentPath ? currentPath + file.name : file.name;
-            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullPath).data.publicUrl;
-
-            const div = document.createElement('div');
-            div.className = 'music-row';
-
-            div.innerHTML = `
-                <div class="music-left">
-                    <div class="music-cover">🎵</div>
-                    <div class="music-text">
-                        <div class="music-title">${escapeHtml(file.name)}</div>
-                        <div class="music-meta">加载中...</div>
-                    </div>
-                </div>
-
-                <div class="music-actions">
-                    <button class="play-btn">▶</button>
-                    <button class="delete-btn">🗑</button>
-                </div>
-
-                <audio preload="metadata" src="${publicUrl}"></audio>
-            `;
-
-            const audio = div.querySelector('audio');
-            const playBtn = div.querySelector('.play-btn');
-
-            // 加载时长
-            audio.addEventListener('loadedmetadata', () => {
-                const duration = Math.floor(audio.duration);
-                const min = Math.floor(duration / 60);
-                const sec = String(duration % 60).padStart(2, '0');
-                div.querySelector('.music-meta').innerText = `${min}:${sec}`;
-            });
-
-            // 播放控制（互斥）
-            playBtn.onclick = (e) => {
-                e.stopPropagation();
-
-                // 暂停所有其他音频
-                document.querySelectorAll('audio').forEach(a => {
-                    if (a !== audio && !a.paused) {
-                        a.pause();
-                        // 同时恢复对应的播放按钮文字
-                        const otherRow = a.closest('.music-row');
-                        if (otherRow) {
-                            const otherBtn = otherRow.querySelector('.play-btn');
-                            if (otherBtn) otherBtn.innerText = '▶';
-                        }
-                    }
-                });
-
-                if (audio.paused) {
-                    audio.play();
-                    playBtn.innerText = '⏸';
-                } else {
-                    audio.pause();
-                    playBtn.innerText = '▶';
-                }
-            };
-
-            // 播放结束恢复按钮
-            audio.onended = () => {
-                playBtn.innerText = '▶';
-            };
-
-            // 删除
-            div.querySelector('.delete-btn').onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm(`删除 ${file.name}?`)) {
-                    await deleteFile(fullPath);
-                }
-            };
-
-            fileGridDiv.appendChild(div);
-        });
-    }
-
-    // 辅助函数：转义 HTML 防止 XSS
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    function updateSelectAllCheckbox() {
-        if (!selectAllCheckbox) return;
-        const total = document.querySelectorAll('.file-checkbox').length;
-        const checked = document.querySelectorAll('.file-checkbox:checked').length;
-        selectAllCheckbox.checked = total > 0 && checked === total;
-        selectAllCheckbox.indeterminate = checked > 0 && checked < total;
-    }
-
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', () => {
-            const checked = selectAllCheckbox.checked;
-            document.querySelectorAll('.file-checkbox').forEach(cb => {
-                cb.checked = checked;
-                const path = cb.getAttribute('data-path');
-                if (checked) selectedFilePaths.add(path);
-                else selectedFilePaths.delete(path);
-            });
-            fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
-        });
-    }
-
-    if (deleteSelectedBtn) deleteSelectedBtn.addEventListener('click', deleteSelectedFiles);
-    if (batchDownloadBtn) batchDownloadBtn.addEventListener('click', batchDownloadSelected);
-
-    function renderBreadcrumb() {
-        breadcrumbDiv.innerHTML = '';
-        const parts = currentPath.split('/').filter(p => p);
-        const crumbs = [{ name: '根目录', path: '' }];
-        let path = '';
-        parts.forEach(part => {
-            path += `${part}/`;
-            crumbs.push({ name: part, path });
-        });
-        crumbs.forEach((crumb, idx) => {
-            const span = document.createElement('span');
-            span.className = 'breadcrumb-item';
-            span.innerText = crumb.name;
-            span.onclick = () => {
-                currentPath = crumb.path;
-                loadCurrentDirectory();
-                selectedFile = null;
-                updateDetailPanel(null);
-            };
-            breadcrumbDiv.appendChild(span);
-            if (idx < crumbs.length - 1) {
-                const sep = document.createElement('span');
-                sep.className = 'breadcrumb-sep';
-                sep.innerText = ' / ';
-                breadcrumbDiv.appendChild(sep);
-            }
-        });
-    }
-
+    // 详情面板更新（含频谱和进度条）
     function updateDetailPanel(file, fullStoragePath) {
-        if (!file) {
-            detailContentDiv.innerHTML = '<div class="empty-state">点击文件查看详情</div>';
-            return;
-        }
+        if (!file) { detailContentDiv.innerHTML = '<div class="empty-state">点击歌曲查看详情并播放</div>'; return; }
         const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullStoragePath).data.publicUrl;
         const encodedUrl = encodeURI(publicUrl);
         const ext = file.name.split('.').pop().toLowerCase();
-        const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
-        const isVideo = ['mp4','webm','mov'].includes(ext);
         const isAudio = ['mp3','wav','ogg','flac','m4a'].includes(ext);
 
-        let previewHtml = '';
-        if (isImage) {
-            previewHtml = `<img src="${encodedUrl}" alt="preview" style="max-width:100%; max-height:200px; object-fit:contain;" onerror="this.onerror=null;this.src='';this.alt='加载失败';">`;
-        } else if (isVideo) {
-            previewHtml = `<video controls style="max-width:100%; max-height:200px;"><source src="${encodedUrl}" type="video/${ext}">无法播放</video>`;
-        } else if (isAudio) {
-            previewHtml = `<audio controls style="width:100%;"><source src="${encodedUrl}" type="audio/${ext}">无法播放</audio>`;
-        } else {
-            previewHtml = `<div style="font-size: 3rem; text-align:center;">📄</div>`;
+        if (currentAudio && currentAudioSrc !== fullStoragePath) {
+            currentAudio.pause();
+            const oldRow = document.querySelector(`.music-row[data-path="${currentAudioSrc}"]`);
+            if (oldRow) { const btn = oldRow.querySelector('.play-btn'); if (btn) btn.innerText = '▶'; }
+            currentAudio = null; currentAudioSrc = null; stopSpectrum();
         }
+
+        let previewHtml = '';
+        if (isAudio) {
+            previewHtml = `
+                <div class="spectrum-container"><canvas id="spectrum" width="300" height="100"></canvas></div>
+                <div class="custom-progress" id="customProgress"><div class="custom-progress-fill" id="progressFill"></div></div>
+                <div class="time-info"><span id="currentTime">0:00</span><span id="duration">0:00</span></div>
+                <audio id="detailAudio" style="display:none;" src="${encodedUrl}" preload="metadata"></audio>
+            `;
+        } else { previewHtml = '<div style="font-size:3rem;">📄</div>'; }
 
         detailContentDiv.innerHTML = `
             <div class="detail-preview">${previewHtml}</div>
@@ -1045,122 +288,355 @@
                 <p><strong>下载链接：</strong> <a href="${encodedUrl}" target="_blank">点击打开</a></p>
             </div>
         `;
+
+        if (isAudio) {
+            const detailAudio = document.getElementById('detailAudio');
+            const progressFill = document.getElementById('progressFill');
+            const currentTimeSpan = document.getElementById('currentTime');
+            const durationSpan = document.getElementById('duration');
+            const progressContainer = document.getElementById('customProgress');
+
+            if (currentAudio && currentAudioSrc === fullStoragePath && currentAudio === detailAudio) {
+                // 复用
+            } else {
+                if (currentAudio) { currentAudio.pause(); stopSpectrum(); }
+                currentAudio = detailAudio; currentAudioSrc = fullStoragePath;
+                connectAudioToSpectrum(currentAudio);
+                currentAudio.onplay = () => { if (audioContext.state === 'suspended') audioContext.resume().then(drawSpectrum); else drawSpectrum(); };
+                currentAudio.onpause = stopSpectrum;
+                currentAudio.onended = () => {
+                    stopSpectrum();
+                    const row = document.querySelector(`.music-row[data-path="${fullStoragePath}"]`);
+                    if (row) { const btn = row.querySelector('.play-btn'); if (btn) btn.innerText = '▶'; }
+                };
+                currentAudio.addEventListener('timeupdate', () => {
+                    if (currentAudio.duration) {
+                        progressFill.style.width = (currentAudio.currentTime / currentAudio.duration * 100) + '%';
+                        currentTimeSpan.innerText = formatTime(currentAudio.currentTime);
+                    }
+                });
+                currentAudio.addEventListener('loadedmetadata', () => {
+                    durationSpan.innerText = formatTime(currentAudio.duration);
+                });
+                progressContainer.addEventListener('click', (e) => {
+                    const rect = progressContainer.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    if (currentAudio.duration) currentAudio.currentTime = percent * currentAudio.duration;
+                });
+                currentAudio.play().catch(e => console.log('自动播放被阻止'));
+            }
+        }
+    }
+
+    // 以下为上传、文件夹管理、列表渲染等函数（完整实现）
+    async function getUniqueFileName(targetPath, fileName) {
+        const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(targetPath || '', { limit: 1000 });
+        if (error) return fileName;
+        const existing = (data || []).map(i => i.name);
+        if (!existing.includes(fileName)) return fileName;
+        let newName = fileName, cnt = 1;
+        const base = fileName.replace(/\.[^/.]+$/, ''), ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+        while (existing.includes(newName)) newName = `${base} (${cnt})${ext}`, cnt++;
+        return newName;
+    }
+
+    async function uploadFiles(fileList) {
+        const files = Array.from(fileList);
+        if (!files.length) return;
+        for (const file of files) {
+            const prefix = currentPath ? (currentPath.endsWith('/') ? currentPath : currentPath + '/') : '';
+            const uniqueName = await getUniqueFileName(prefix, file.name);
+            const remotePath = prefix + uniqueName;
+            const taskId = nextTaskId++;
+            uploadTasks.set(taskId, { fileName: file.name, progress: 0, status: '等待中', xhr: null });
+            updateTransferUI();
+            pendingUploadQueue.push({ file, remotePath, taskId });
+            processQueue();
+        }
+        uploadInput.value = '';
+    }
+
+    function processQueue() {
+        while (activeUploads < MAX_CONCURRENT && pendingUploadQueue.length) {
+            const item = pendingUploadQueue.shift();
+            activeUploads++;
+            const task = uploadTasks.get(item.taskId);
+            if (task) task.status = '上传中';
+            updateTransferUI();
+            performUpload(item.file, item.remotePath, item.taskId)
+                .catch(err => { showToast(`${item.file.name} 上传失败: ${err.message}`, true); uploadTasks.delete(item.taskId); updateTransferUI(); })
+                .finally(() => {
+                    activeUploads--;
+                    processQueue();
+                    if (activeUploads === 0 && pendingUploadQueue.length === 0) loadCurrentDirectory();
+                });
+        }
+    }
+
+    function performUpload(file, remotePath, taskId) {
+        const formData = new FormData(); formData.append('file', file);
+        const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${remotePath}`;
+        const xhr = new XMLHttpRequest();
+        const task = uploadTasks.get(taskId);
+        if (task) task.xhr = xhr;
+        return new Promise((resolve, reject) => {
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const t = uploadTasks.get(taskId);
+                    if (t) { t.progress = percent; t.status = '上传中'; updateTransferUI(); }
+                }
+            };
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const t = uploadTasks.get(taskId);
+                    if (t) { t.status = '完成'; t.progress = 100; updateTransferUI(); setTimeout(() => { uploadTasks.delete(taskId); updateTransferUI(); }, 1000); }
+                    resolve();
+                } else reject(new Error(`上传失败: ${xhr.status}`));
+                activeUploads--; processQueue();
+            };
+            xhr.onerror = () => reject(new Error('网络错误'));
+            xhr.onabort = () => reject(new Error('已取消'));
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+            xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+            xhr.send(formData);
+        });
+    }
+
+    function cancelUpload(taskId) {
+        const task = uploadTasks.get(taskId);
+        if (task && task.xhr) { task.xhr.abort(); task.status = '已取消'; uploadTasks.delete(taskId); activeUploads--; showToast(`已取消: ${task.fileName}`); processQueue(); updateTransferUI(); }
+    }
+
+    function updateTransferUI() {
+        if (uploadTasks.size === 0 && pendingUploadQueue.length === 0) { transferContent.innerHTML = '<div class="empty-state">暂无传输任务</div>'; return; }
+        let html = '';
+        for (const [id, t] of uploadTasks) html += `<div class="transfer-item" data-task-id="${id}"><div class="transfer-name">📤 ${t.fileName}</div><div class="transfer-progress"><div class="transfer-progress-bar" style="width:${t.progress}%"></div></div><div class="transfer-status">${t.status} (${t.progress}%) <span class="transfer-cancel" data-task-id="${id}">取消</span></div></div>`;
+        for (const p of pendingUploadQueue) html += `<div class="transfer-item"><div class="transfer-name">⏳ ${p.file.name}</div><div class="transfer-status">等待上传</div></div>`;
+        transferContent.innerHTML = html;
+        document.querySelectorAll('.transfer-cancel').forEach(btn => btn.addEventListener('click', e => cancelUpload(parseInt(btn.dataset.taskId))));
+    }
+
+    async function getAllFilesInFolder(folderPath) {
+        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        const files = [];
+        try {
+            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
+            if (error) throw error;
+            for (const item of data) {
+                const full = path + item.name;
+                if (item.name.endsWith('/')) files.push(...(await getAllFilesInFolder(full)));
+                else files.push(full);
+            }
+        } catch(e) { console.error(e); }
+        return files;
+    }
+
+    async function downloadFolderAsZip(folderPath) {
+        const files = await getAllFilesInFolder(folderPath);
+        if (!files.length) { showToast('文件夹为空', true); return; }
+        const zip = new JSZip();
+        const folderName = folderPath.replace(/\/$/, '').split('/').pop();
+        for (const fp of files) {
+            const url = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fp).data.publicUrl;
+            const resp = await fetch(url); const blob = await resp.blob();
+            zip.file(fp.replace(folderPath, ''), blob);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = `${folderName}.zip`; a.click(); URL.revokeObjectURL(a.href);
+        showToast(`✅ 文件夹 ${folderName} 已打包下载`);
+    }
+
+    async function batchDownloadSelected() {
+        const paths = Array.from(selectedFilePaths);
+        if (!paths.length) { showToast('请先选中文件', true); return; }
+        const zip = new JSZip();
+        for (const fp of paths) {
+            const url = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fp).data.publicUrl;
+            const resp = await fetch(url); const blob = await resp.blob();
+            zip.file(fp.split('/').pop(), blob);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = 'selected_files.zip'; a.click(); URL.revokeObjectURL(a.href);
+        showToast(`✅ 已打包 ${paths.length} 个文件`);
+    }
+
+    async function deleteFolderRecursive(folderPath) {
+        const path = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(path, { limit: 1000 });
+        if (error) throw error;
+        for (const item of data) {
+            const full = path + item.name;
+            if (item.name.endsWith('/')) await deleteFolderRecursive(full);
+            else await supabaseClient.storage.from(BUCKET_NAME).remove([full]);
+        }
+        await supabaseClient.storage.from(BUCKET_NAME).remove([path]);
+    }
+
+    async function deleteFile(filename) {
+        try {
+            const { error } = await supabaseClient.storage.from(BUCKET_NAME).remove([filename]);
+            if (error) throw error;
+            showToast(`✅ 已删除 ${filename}`);
+            if (selectedFilePaths.has(filename)) selectedFilePaths.delete(filename);
+            loadCurrentDirectory();
+        } catch(e) { showToast(`删除失败: ${e.message}`, true); }
+    }
+
+    async function deleteSelectedFiles() {
+        const paths = Array.from(selectedFilePaths);
+        if (!paths.length) return;
+        if (confirm(`删除 ${paths.length} 个文件？`)) {
+            let ok = 0, fail = 0;
+            for (const p of paths) { try { await supabaseClient.storage.from(BUCKET_NAME).remove([p]); ok++; } catch(e) { fail++; } }
+            showToast(`删除完成: 成功 ${ok} 个，失败 ${fail} 个`);
+            selectedFilePaths.clear();
+            loadCurrentDirectory();
+        }
+    }
+
+    async function loadCurrentDirectory() {
+        fileGridDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+        folderListDiv.innerHTML = '<div class="empty-state">⏳ 加载中...</div>';
+        selectedFilePaths.clear(); updateSelectAllCheckbox(); fileToolbar.style.display = 'none';
+        try {
+            const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).list(currentPath, { limit: 1000 });
+            if (error) throw error;
+            const valid = (data || []).filter(i => i.name && i.name !== '.emptyFolderPlaceholder');
+            const folders = new Set();
+            valid.forEach(i => {
+                const n = i.name;
+                if (n.endsWith('/')) {
+                    let f = n; if (currentPath && f.startsWith(currentPath)) f = f.substring(currentPath.length);
+                    f = f.replace(/\/+$/, '');
+                    if (f && !f.includes('/')) folders.add(f);
+                } else if (!i.metadata || i.metadata.size === 0) { if (!n.includes('/')) folders.add(n); }
+            });
+            renderFolderList(Array.from(folders).sort());
+            const files = valid.filter(i => !i.name.endsWith('/') && i.metadata && i.metadata.size > 0);
+            renderFileGrid(files);
+            renderBreadcrumb();
+        } catch(e) { console.error(e); fileGridDiv.innerHTML = `<div class="empty-state" style="color:#dc3545">❌ 加载失败: ${e.message}</div>`; folderListDiv.innerHTML = '<div class="empty-state">加载失败</div>'; showToast(`加载失败: ${e.message}`, true); }
+    }
+
+    function renderFolderList(folders) {
+        if (!folders.length) { folderListDiv.innerHTML = '<div class="empty-state">📭 无子文件夹</div>'; return; }
+        folderListDiv.innerHTML = '';
+        folders.forEach(f => {
+            const div = document.createElement('div'); div.className = 'folder-item';
+            div.innerHTML = `<div class="folder-name"><span>📁 ${f}</span></div><button class="folder-delete" data-folder="${f}">🗑️</button>`;
+            div.querySelector('.folder-name').onclick = () => { currentPath = currentPath ? `${currentPath}${f}/` : `${f}/`; loadCurrentDirectory(); selectedFile = null; updateDetailPanel(null); };
+            div.querySelector('.folder-delete').onclick = async e => { e.stopPropagation(); if (confirm(`删除文件夹 "${f}" 及其内容？`)) { try { await deleteFolderRecursive(currentPath ? `${currentPath}${f}/` : `${f}/`); showToast(`✅ 文件夹 "${f}" 已删除`); loadCurrentDirectory(); } catch(e) { showToast(`删除失败: ${e.message}`, true); } } };
+            div.addEventListener('contextmenu', e => { e.preventDefault(); currentContextTarget = { type: 'folder', name: f, path: currentPath ? `${currentPath}${f}/` : `${f}/` }; showContextMenu(e.clientX, e.clientY); });
+            folderListDiv.appendChild(div);
+        });
+    }
+
+    function renderFileGrid(files) {
+        if (!files.length) { fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无音乐，拖进来或者上传</div>'; fileToolbar.style.display = 'none'; return; }
+        fileGridDiv.innerHTML = '';
+        files.forEach(file => {
+            const fullPath = currentPath ? currentPath + file.name : file.name;
+            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullPath).data.publicUrl;
+            const div = document.createElement('div'); div.className = 'music-row'; div.setAttribute('data-path', fullPath);
+            div.innerHTML = `
+                <div class="music-left">
+                    <input type="checkbox" class="file-checkbox" data-path="${fullPath}">
+                    <div class="music-cover">🎵</div>
+                    <div class="music-text"><div class="music-title">${escapeHtml(file.name)}</div><div class="music-meta">加载中...</div></div>
+                </div>
+                <div class="music-actions">
+                    <button class="play-btn">▶</button>
+                    <button class="download-btn">⬇️</button>
+                    <button class="delete-btn">🗑</button>
+                </div>
+                <audio preload="metadata" src="${publicUrl}"></audio>
+            `;
+            const checkbox = div.querySelector('.file-checkbox');
+            checkbox.addEventListener('change', e => { e.stopPropagation(); if (checkbox.checked) selectedFilePaths.add(fullPath); else selectedFilePaths.delete(fullPath); updateSelectAllCheckbox(); fileToolbar.style.display = selectedFilePaths.size ? 'flex' : 'none'; });
+            const audio = div.querySelector('audio');
+            const playBtn = div.querySelector('.play-btn');
+            audio.addEventListener('loadedmetadata', () => { const dur = Math.floor(audio.duration); div.querySelector('.music-meta').innerText = `${Math.floor(dur/60)}:${String(dur%60).padStart(2,'0')}`; });
+            playBtn.onclick = e => { e.stopPropagation(); document.querySelectorAll('audio').forEach(a => { if (a !== audio && !a.paused) { a.pause(); const row = a.closest('.music-row'); if (row) row.querySelector('.play-btn').innerText = '▶'; } }); if (audio.paused) { audio.play(); playBtn.innerText = '⏸'; } else { audio.pause(); playBtn.innerText = '▶'; } };
+            audio.onended = () => { playBtn.innerText = '▶'; };
+            div.querySelector('.download-btn').onclick = e => { e.stopPropagation(); window.open(publicUrl, '_blank'); };
+            div.querySelector('.delete-btn').onclick = async e => { e.stopPropagation(); if (confirm(`删除 ${file.name}?`)) await deleteFile(fullPath); };
+            div.addEventListener('contextmenu', e => { e.preventDefault(); currentContextTarget = { type: 'file', name: file.name, path: fullPath }; showContextMenu(e.clientX, e.clientY); });
+            div.addEventListener('click', e => { if (e.target === checkbox || e.target.closest('.music-actions')) return; selectedFile = file; updateDetailPanel(file, fullPath); document.querySelectorAll('.music-row').forEach(r => r.classList.remove('selected')); div.classList.add('selected'); });
+            fileGridDiv.appendChild(div);
+        });
+        updateSelectAllCheckbox(); fileToolbar.style.display = selectedFilePaths.size ? 'flex' : 'none';
+    }
+
+    function updateSelectAllCheckbox() {
+        const total = document.querySelectorAll('.file-checkbox').length;
+        const checked = document.querySelectorAll('.file-checkbox:checked').length;
+        if (selectAllCheckbox) { selectAllCheckbox.checked = total && checked === total; selectAllCheckbox.indeterminate = checked && checked < total; }
+    }
+
+    if (selectAllCheckbox) selectAllCheckbox.addEventListener('change', () => { const checked = selectAllCheckbox.checked; document.querySelectorAll('.file-checkbox').forEach(cb => { cb.checked = checked; const path = cb.getAttribute('data-path'); if (checked) selectedFilePaths.add(path); else selectedFilePaths.delete(path); }); fileToolbar.style.display = selectedFilePaths.size ? 'flex' : 'none'; });
+    if (deleteSelectedBtn) deleteSelectedBtn.addEventListener('click', deleteSelectedFiles);
+    if (batchDownloadBtn) batchDownloadBtn.addEventListener('click', batchDownloadSelected);
+
+    function renderBreadcrumb() {
+        breadcrumbDiv.innerHTML = '';
+        const parts = currentPath.split('/').filter(p => p);
+        const crumbs = [{ name: '根目录', path: '' }]; let path = '';
+        parts.forEach(p => { path += `${p}/`; crumbs.push({ name: p, path }); });
+        crumbs.forEach((c, i) => { const span = document.createElement('span'); span.className = 'breadcrumb-item'; span.innerText = c.name; span.onclick = () => { currentPath = c.path; loadCurrentDirectory(); selectedFile = null; updateDetailPanel(null); }; breadcrumbDiv.appendChild(span); if (i < crumbs.length-1) { const sep = document.createElement('span'); sep.className = 'breadcrumb-sep'; sep.innerText = ' / '; breadcrumbDiv.appendChild(sep); } });
     }
 
     async function createFolder() {
-        const folderName = prompt('请输入文件夹名称（仅英文、数字、下划线）', '新文件夹');
-        if (!folderName) return;
-        const cleanName = folderName.replace(/[^a-zA-Z0-9_]/g, '_');
-        if (!cleanName) {
-            showToast('无效的文件夹名称', true);
-            return;
-        }
-        const folderPath = currentPath ? `${currentPath}${cleanName}/` : `${cleanName}/`;
+        const name = prompt('文件夹名称 (字母数字下划线)', '新文件夹');
+        if (!name) return;
+        const clean = name.replace(/[^a-zA-Z0-9_]/g, '_');
+        if (!clean) { showToast('无效名称', true); return; }
+        const folderPath = currentPath ? `${currentPath}${clean}/` : `${clean}/`;
         try {
-            const { error } = await supabaseClient.storage
-                .from(BUCKET_NAME)
-                .upload(folderPath, new Blob([]), { contentType: 'application/x-directory' });
+            const { error } = await supabaseClient.storage.from(BUCKET_NAME).upload(folderPath, new Blob([]), { contentType: 'application/x-directory' });
             if (error) throw error;
-            showToast(`✅ 文件夹 "${cleanName}" 创建成功`);
+            showToast(`✅ 文件夹 "${clean}" 创建成功`);
             loadCurrentDirectory();
-        } catch (err) {
-            showToast(`创建失败: ${err.message}`, true);
-        }
+        } catch(e) { showToast(`创建失败: ${e.message}`, true); }
     }
 
-    // ==================== 右键菜单 ====================
     function showContextMenu(x, y) {
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        // 根据目标类型显示不同菜单项
+        contextMenu.style.display = 'block'; contextMenu.style.left = `${x}px`; contextMenu.style.top = `${y}px`;
         const downloadFolderItem = contextMenu.querySelector('[data-action="downloadFolder"]');
-        if (currentContextTarget.type === 'folder') {
-            downloadFolderItem.style.display = 'block';
-        } else {
-            downloadFolderItem.style.display = 'none';
-        }
+        if (currentContextTarget?.type === 'folder') downloadFolderItem.style.display = 'block'; else downloadFolderItem.style.display = 'none';
     }
+    function hideContextMenu() { contextMenu.style.display = 'none'; }
+    document.querySelectorAll('.context-menu-item').forEach(item => item.addEventListener('click', async () => {
+        const action = item.dataset.action;
+        if (!currentContextTarget) return;
+        if (action === 'download') {
+            if (currentContextTarget.type === 'file') window.open(supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(currentContextTarget.path).data.publicUrl, '_blank');
+            else if (currentContextTarget.type === 'folder') await downloadFolderAsZip(currentContextTarget.path);
+        } else if (action === 'delete') {
+            if (currentContextTarget.type === 'file') { if (confirm(`删除 "${currentContextTarget.name}"?`)) await deleteFile(currentContextTarget.path); }
+            else if (currentContextTarget.type === 'folder') { if (confirm(`删除文件夹 "${currentContextTarget.name}" 及其内容？`)) { try { await deleteFolderRecursive(currentContextTarget.path); showToast(`✅ 文件夹已删除`); loadCurrentDirectory(); } catch(e) { showToast(`删除失败: ${e.message}`, true); } } }
+        } else if (action === 'downloadFolder' && currentContextTarget.type === 'folder') { await downloadFolderAsZip(currentContextTarget.path); }
+        hideContextMenu();
+    }));
+    document.addEventListener('click', hideContextMenu);
 
-    function hideContextMenu() {
-        contextMenu.style.display = 'none';
-    }
-
-    // 处理右键菜单点击
-    document.querySelectorAll('.context-menu-item').forEach(item => {
-        item.addEventListener('click', async () => {
-            const action = item.dataset.action;
-            if (!currentContextTarget) return;
-            if (action === 'download') {
-                if (currentContextTarget.type === 'file') {
-                    const url = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(currentContextTarget.path).data.publicUrl;
-                    window.open(url, '_blank');
-                } else if (currentContextTarget.type === 'folder') {
-                    await downloadFolderAsZip(currentContextTarget.path);
-                }
-            } else if (action === 'delete') {
-                if (currentContextTarget.type === 'file') {
-                    if (confirm(`确定要删除 "${currentContextTarget.name}" 吗？`)) {
-                        await deleteFile(currentContextTarget.path);
-                    }
-                } else if (currentContextTarget.type === 'folder') {
-                    if (confirm(`确定要删除文件夹 "${currentContextTarget.name}" 及其所有内容吗？`)) {
-                        try {
-                            await deleteFolderRecursive(currentContextTarget.path);
-                            showToast(`✅ 文件夹 "${currentContextTarget.name}" 已删除`);
-                            loadCurrentDirectory();
-                        } catch (err) {
-                            showToast(`删除失败: ${err.message}`, true);
-                        }
-                    }
-                }
-            } else if (action === 'downloadFolder') {
-                if (currentContextTarget.type === 'folder') {
-                    await downloadFolderAsZip(currentContextTarget.path);
-                }
-            }
-            hideContextMenu();
-        });
-    });
-
-    document.addEventListener('click', () => hideContextMenu());
-
-    // 传输面板折叠/展开
     const transferHeader = transferPanel.querySelector('.transfer-header');
-    transferHeader.addEventListener('click', () => {
-        transferPanel.classList.toggle('open');
-        transferHeader.querySelector('span:last-child').innerText = transferPanel.classList.contains('open') ? '▲' : '▼';
-    });
+    transferHeader.addEventListener('click', () => { transferPanel.classList.toggle('open'); transferHeader.querySelector('span:last-child').innerText = transferPanel.classList.contains('open') ? '▲' : '▼'; });
     transferPanel.classList.add('open');
 
-    // 拖拽上传
     function setupDragAndDrop() {
-        let dragCounter = 0;
-        document.body.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dragCounter++;
-            document.body.classList.add('drag-over');
-        });
-        document.body.addEventListener('dragleave', (e) => {
-            dragCounter--;
-            if (dragCounter === 0) document.body.classList.remove('drag-over');
-        });
-        document.body.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            dragCounter = 0;
-            document.body.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            if (files.length) await uploadFiles(files);
-        });
+        let cnt = 0;
+        document.body.addEventListener('dragover', e => { e.preventDefault(); cnt++; document.body.classList.add('drag-over'); });
+        document.body.addEventListener('dragleave', e => { cnt--; if (cnt === 0) document.body.classList.remove('drag-over'); });
+        document.body.addEventListener('drop', async e => { e.preventDefault(); cnt = 0; document.body.classList.remove('drag-over'); const files = e.dataTransfer.files; if (files.length) await uploadFiles(files); });
     }
 
-    // 事件绑定
-    uploadInput.addEventListener('change', (e) => uploadFiles(e.target.files));
+    uploadInput.addEventListener('change', e => uploadFiles(e.target.files));
     createFolderBtn.addEventListener('click', createFolder);
     createFolderBtnSidebar.addEventListener('click', createFolder);
     refreshBtn.addEventListener('click', () => loadCurrentDirectory());
     setupDragAndDrop();
-
     loadCurrentDirectory();
 </script>
 </body>
