@@ -374,35 +374,43 @@
     }
 
     function performUpload(file, remotePath, taskId) {
-        const formData = new FormData(); formData.append('file', file);
-        const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${remotePath}`;
-        const xhr = new XMLHttpRequest();
-        const task = uploadTasks.get(taskId);
-        if (task) task.xhr = xhr;
-        return new Promise((resolve, reject) => {
-            xhr.upload.onprogress = e => {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    const t = uploadTasks.get(taskId);
-                    if (t) { t.progress = percent; t.status = '上传中'; updateTransferUI(); }
-                }
-            };
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    const t = uploadTasks.get(taskId);
-                    if (t) { t.status = '完成'; t.progress = 100; updateTransferUI(); setTimeout(() => { uploadTasks.delete(taskId); updateTransferUI(); }, 1000); }
-                    resolve();
-                } else reject(new Error(`上传失败: ${xhr.status}`));
-                activeUploads--; processQueue();
-            };
-            xhr.onerror = () => reject(new Error('网络错误'));
-            xhr.onabort = () => reject(new Error('已取消'));
-            xhr.open('POST', url);
-            xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
-            xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-            xhr.send(formData);
-        });
-    }
+    // 对 remotePath 进行路径分段编码（保留斜杠）
+    const encodedPath = remotePath.split('/').map(encodeURIComponent).join('/');
+    const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${encodedPath}`;
+    const formData = new FormData();
+    formData.append('file', file);
+    const xhr = new XMLHttpRequest();
+    const task = uploadTasks.get(taskId);
+    if (task) task.xhr = xhr;
+
+    return new Promise((resolve, reject) => {
+        xhr.upload.onprogress = e => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                const t = uploadTasks.get(taskId);
+                if (t) { t.progress = percent; t.status = '上传中'; updateTransferUI(); }
+            }
+        };
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const t = uploadTasks.get(taskId);
+                if (t) { t.status = '完成'; t.progress = 100; updateTransferUI(); setTimeout(() => { uploadTasks.delete(taskId); updateTransferUI(); }, 1000); }
+                resolve();
+            } else {
+                // 打印服务器返回的错误信息，便于调试
+                console.error('上传失败响应:', xhr.responseText);
+                reject(new Error(`上传失败 (${xhr.status}): ${xhr.responseText}`));
+            }
+            activeUploads--; processQueue();
+        };
+        xhr.onerror = () => reject(new Error('网络错误'));
+        xhr.onabort = () => reject(new Error('已取消'));
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+        xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+        xhr.send(formData);
+    });
+}
 
     function cancelUpload(taskId) {
         const task = uploadTasks.get(taskId);
