@@ -168,7 +168,7 @@
             background: #0f1117;
         }
         .file-preview img, .file-preview video { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .file-preview audio { width: 90%; }
+        .file-preview audio {width: 100%;   /* 原来 90% */}
         .file-info { padding: 10px; }
         .file-name { font-size: 0.85rem; font-weight: 500; word-break: break-all; margin-bottom: 6px; }
         .file-meta { font-size: 0.7rem; color: #9aa2b5; display: flex; justify-content: space-between; }
@@ -815,78 +815,91 @@
         });
     }
 
-    function renderFileGrid(files) {
-        if (files.length === 0) {
-            fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
-            fileToolbar.style.display = 'none';
-            return;
-        }
-
-        fileGridDiv.innerHTML = '';
-        files.forEach(file => {
-            const fullStoragePath = currentPath ? currentPath + file.name : file.name;
-            const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullStoragePath).data.publicUrl;
-            const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
-            const fileDate = file.created_at ? formatDate(file.created_at) : '-';
-            const isSelected = selectedFilePaths.has(fullStoragePath);
-
-            const card = document.createElement('div');
-            card.className = 'file-card';
-            if (selectedFile && selectedFile.name === file.name) card.classList.add('selected');
-            card.innerHTML = `
-                <input type="checkbox" class="file-checkbox" data-path="${fullStoragePath}" ${isSelected ? 'checked' : ''}>
-                <div class="file-preview">
-                    ${getPreviewHtml(file.name, publicUrl)}
-                </div>
-                <div class="file-info">
-                    <div class="file-name" title="${file.name}">${file.name}</div>
-                    <div class="file-meta">
-                        <span>${fileSize}</span>
-                        <span>${fileDate}</span>
-                    </div>
-                    <div class="file-actions">
-                        <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载（powered by Limingjie&Xlead）</a>
-                        <button class="btn-small delete-btn" data-filename="${fullStoragePath}">🗑️ 删除</button>
-                    </div>
-                </div>
-            `;
-            card.onclick = (e) => {
-                if (e.target.type === 'checkbox' || e.target.closest('.file-actions')) return;
-                selectedFile = file;
-                updateDetailPanel(file, fullStoragePath);
-                document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-            };
-            const checkbox = card.querySelector('.file-checkbox');
-            checkbox.addEventListener('change', (e) => {
-                e.stopPropagation();
-                if (checkbox.checked) selectedFilePaths.add(fullStoragePath);
-                else selectedFilePaths.delete(fullStoragePath);
-                updateSelectAllCheckbox();
-                fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
-            });
-            // 右键菜单
-            card.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                currentContextTarget = { type: 'file', name: file.name, path: fullStoragePath };
-                showContextMenu(e.clientX, e.clientY);
-            });
-            fileGridDiv.appendChild(card);
-        });
-
-        // 删除按钮事件
-        fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const filename = btn.getAttribute('data-filename');
-                if (confirm(`确定要删除 "${filename}" 吗？`)) await deleteFile(filename);
-            });
-        });
-
-        fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
-        updateSelectAllCheckbox();
+function renderFileGrid(files) {
+    if (files.length === 0) {
+        fileGridDiv.innerHTML = '<div class="empty-state">📭 暂无文件，点击上方按钮上传</div>';
+        fileToolbar.style.display = 'none';
+        return;
     }
 
+    fileGridDiv.innerHTML = '';
+    files.forEach(file => {
+        const fullStoragePath = currentPath ? currentPath + file.name : file.name;
+        const publicUrl = supabaseClient.storage.from(BUCKET_NAME).getPublicUrl(fullStoragePath).data.publicUrl;
+        const fileSize = file.metadata?.size ? formatBytes(file.metadata.size) : '-';
+        const fileDate = file.created_at ? formatDate(file.created_at) : '-';
+        const isSelected = selectedFilePaths.has(fullStoragePath);
+
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        if (selectedFile && selectedFile.name === file.name) card.classList.add('selected');
+        card.innerHTML = `
+            <input type="checkbox" class="file-checkbox" data-path="${fullStoragePath}" ${isSelected ? 'checked' : ''}>
+            <div class="file-preview">
+                ${getPreviewHtml(file.name, publicUrl)}
+            </div>
+            <div class="file-info">
+                <div class="file-name" title="${file.name}">${file.name}</div>
+                <div class="file-meta">
+                    <span>${fileSize}</span>
+                    <span>${fileDate}</span>
+                </div>
+                <div class="file-actions">
+                    <a href="${publicUrl}" target="_blank" class="btn-small" download>⬇️ 下载</a>
+                    <button class="btn-small delete-btn" data-filename="${fullStoragePath}">🗑️ 删除</button>
+                </div>
+            </div>
+        `;
+        card.onclick = (e) => {
+            if (e.target.type === 'checkbox' || e.target.closest('.file-actions')) return;
+            selectedFile = file;
+            updateDetailPanel(file, fullStoragePath);
+            document.querySelectorAll('.file-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        };
+        const checkbox = card.querySelector('.file-checkbox');
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            if (checkbox.checked) selectedFilePaths.add(fullStoragePath);
+            else selectedFilePaths.delete(fullStoragePath);
+            updateSelectAllCheckbox();
+            fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+        });
+        card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            currentContextTarget = { type: 'file', name: file.name, path: fullStoragePath };
+            showContextMenu(e.clientX, e.clientY);
+        });
+        fileGridDiv.appendChild(card);
+    });
+
+    // 删除按钮事件
+    fileGridDiv.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const filename = btn.getAttribute('data-filename');
+            if (confirm(`确定要删除 "${filename}" 吗？`)) await deleteFile(filename);
+        });
+    });
+
+    // 音频全局管理：一次只能播放一个
+    const audioElements = fileGridDiv.querySelectorAll('audio');
+    function pauseAllOtherAudios(currentAudio) {
+        audioElements.forEach(audio => {
+            if (audio !== currentAudio && !audio.paused) {
+                audio.pause();
+            }
+        });
+    }
+    audioElements.forEach(audio => {
+        audio.removeEventListener('play', audio._playHandler); // 防止重复绑定
+        audio._playHandler = () => pauseAllOtherAudios(audio);
+        audio.addEventListener('play', audio._playHandler);
+    });
+
+    fileToolbar.style.display = selectedFilePaths.size > 0 ? 'flex' : 'none';
+    updateSelectAllCheckbox();
+}
     function updateSelectAllCheckbox() {
         if (!selectAllCheckbox) return;
         const total = document.querySelectorAll('.file-checkbox').length;
