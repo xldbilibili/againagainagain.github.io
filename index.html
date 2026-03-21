@@ -556,19 +556,29 @@
 
     // 处理队列
     function processQueue() {
-        while (activeUploads < MAX_CONCURRENT && pendingUploadQueue.length > 0) {
-            const item = pendingUploadQueue.shift();
-            activeUploads++;
-            const task = uploadTasks.get(item.taskId);
-            if (task) task.status = '上传中';
-            updateTransferUI();
-            performUpload(item.file, item.remotePath, item.taskId).catch(err => {
+    while (activeUploads < MAX_CONCURRENT && pendingUploadQueue.length > 0) {
+        const item = pendingUploadQueue.shift();
+        activeUploads++;
+        const task = uploadTasks.get(item.taskId);
+        if (task) task.status = '上传中';
+        updateTransferUI();
+        performUpload(item.file, item.remotePath, item.taskId)
+            .catch(err => {
                 showToast(`${item.file.name} 上传失败: ${err.message}`, true);
                 uploadTasks.delete(item.taskId);
                 updateTransferUI();
+            })
+            .finally(() => {
+                activeUploads--;
+                // 继续处理队列中的其他任务
+                processQueue();
+                // 所有任务完成后刷新文件列表
+                if (activeUploads === 0 && pendingUploadQueue.length === 0) {
+                    loadCurrentDirectory();
+                }
             });
-        }
     }
+}
 
     // 上传入口（多文件）
     async function uploadFiles(fileList) {
